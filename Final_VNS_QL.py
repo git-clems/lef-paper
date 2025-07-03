@@ -4,17 +4,12 @@ import time
 import matplotlib.pyplot as plt
 import pandas as pd
 from gurobipy import Model, GRB, quicksum
-
-import gymnasium as gym
-from gymnasium import spaces
-import numpy as np
 import random
 
 start_time = time.process_time()
 
 V = 200
 u = 70
-
 
 problem_data = {
     'T': T, 'I': I, 'S': S, 'NB_T': NB_T, 'NB_I': NB_I, 'NB_S': NB_S, 'b': b, 'd': d, 
@@ -281,243 +276,98 @@ def evaluate_solution(Y, sub_model, capacity_constrs, data):
         return float('inf') # Penalize infeasible investment plans
 
 
-class VNSEnv(gym.Env):
-    """
-    A custom Gymnasium Environment for the Variable Neighborhood Search problem.
-
-    The environment's state represents the search status (Improvement vs. Stagnation),
-    and the actions correspond to choosing a neighborhood 'k' for the VNS shake.
-    """
-    metadata = {'render_modes': []}
-
-    def __init__(self, problem_data, k_max=4):
-        super(VNSEnv, self).__init__()
-
-        self.problem_data = problem_data
-        self.k_max = k_max
-
-        # 1. Define Action and Observation Space
-        # Actions: Choose neighborhood k from 1 to k_max. We use 0 to k_max-1.
-        self.action_space = spaces.Discrete(self.k_max)
-        # Observations (States): 0 for "Improvement", 1 for "Stagnation"
-        self.observation_space = spaces.Discrete(2)
-
-        # 2. Initialize VNS problem components
-        # This is a critical optimization: the Gurobi model is created only ONCE.
-        self.sub_model, self.capacity_constrs = create_subproblem_model(self.problem_data)
-        
-        # Internal state of the VNS search
-        self.Y_best = None
-        self.cost_best = float('inf')
-
-    def reset(self, seed=None, options=None):
-        """Resets the environment to an initial state."""
-        super().reset(seed=seed)
-
-        # Generate the initial solution using the greedy heuristic
-        self.Y_best = generate_greedy_initial_solution(self.problem_data)
-        self.cost_best = evaluate_solution(self.Y_best, self.sub_model, self.capacity_constrs, self.problem_data)
-        
-        # Initial state is always "Improvement"
-        observation = 0
-        info = {'best_cost': self.cost_best}
-        
-        print(f"Environment Reset. Initial Cost: {self.cost_best:.2f}")
-        return observation, info
-
-    def step(self, action):
-        """Execute one time step within the environment."""
-        # The action from the agent is an int (0, 1, ...). Map it to k (1, 2, ...).
-        action_k = action + 1
-        
-        # 1. Perform the shake using the chosen neighborhood
-        Y_shaken = shake(self.Y_best, action_k, self.problem_data)
-        cost_shaken = evaluate_solution(Y_shaken, self.sub_model, self.capacity_constrs, self.problem_data)
-        
-        # 2. Determine reward and next state
-        if cost_shaken < self.cost_best:
-            # Improvement found
-            self.cost_best = cost_shaken
-            self.Y_best = Y_shaken # Update the best solution
-            
-            reward = 10.0
-            next_observation = 0  # "Improvement" state
-        else:
-            # No improvement (stagnation)
-            reward = -1.0
-            next_observation = 1  # "Stagnation" state
-
-        # 3. Define termination conditions
-        # In this setup, the training loop controls the number of steps,
-        # so the environment itself doesn't terminate.
-        terminated = False
-        truncated = False
-        
-        # 4. Provide additional info (optional, but good practice)
-        info = {'best_cost': self.cost_best}
-        
-        return next_observation, reward, terminated, truncated, info
-
-    def close(self):
-        """Clean up any resources (e.g., Gurobi model) if necessary."""
-        # Gurobi objects are usually managed by Python's garbage collector,
-        # but explicit cleanup can be done here if needed.
-        print("VNS Environment closed.")
-
 # --- Main Q-Learning VNS (Q-VNS) Procedure ---
 
-# def Q_VNS(max_iterations, data, alpha=0.1, gamma=0.9, epsilon=0.1):
-#     """
-#     Performs a VNS search guided by a Q-Learning agent.
+def Q_VNS(max_iterations, data, alpha=0.1, gamma=0.9, epsilon=0.1):
+    """
+    Performs a VNS search guided by a Q-Learning agent.
     
-#     Hyperparameters:
-#     - alpha (float): Learning rate.
-#     - gamma (float): Discount factor for future rewards.
-#     - epsilon (float): Exploration rate.
-#     """
+    Hyperparameters:
+    - alpha (float): Learning rate.
+    - gamma (float): Discount factor for future rewards.
+    - epsilon (float): Exploration rate.
+    """
     
-#     #print("--- Starting Q-Learning VNS ---")
-#     start_vns_time = time.time()
+    #print("--- Starting Q-Learning VNS ---")
+    start_vns_time = time.time()
 
-#     # --- Q-Learning Setup ---
-#     states = [0, 1]  # 0: Improvement, 1: Stagnation
-#     actions = list(range(1, 4)) # Corresponds to k=1, 2, 3, 4
-#     q_table = initialize_q_table(states, actions)
-#     print(q_table)
+    # --- Q-Learning Setup ---
+    states = [0, 1]  # 0: Improvement, 1: Stagnation
+    actions = list(range(1, 4)) # Corresponds to k=1, 2, 3, 4
+    q_table = initialize_q_table(states, actions)
+    print(q_table)
     
-#     # --- VNS Initialization ---
-#     sub_model, capacity_constrs = create_subproblem_model(data)
-#     Y_best = generate_greedy_initial_solution(data)
+    # --- VNS Initialization ---
+    sub_model, capacity_constrs = create_subproblem_model(data)
+    Y_best = generate_greedy_initial_solution(data)
 
-#     cost_best = evaluate_solution(Y_best, sub_model, capacity_constrs, data)
+    cost_best = evaluate_solution(Y_best, sub_model, capacity_constrs, data)
 
-#     objective_history = [cost_best]
-#     current_state = 0 # Start in the "Improvement" state
-#     iter_count = 0
-#     time_history = []
-#     cost_history = []
-#     time_history.append(time.time() - start_vns_time)
-#     cost_history.append(cost_best)
+    objective_history = [cost_best]
+    current_state = 0 # Start in the "Improvement" state
+    iter_count = 0
+    time_history = []
+    cost_history = []
+    time_history.append(time.time() - start_vns_time)
+    cost_history.append(cost_best)
     
-#     while iter_count < max_iterations:
-#         # 1. Agent chooses an action (which neighborhood k to use)
-#         action_k = choose_action(current_state, q_table, actions, epsilon)
+    while iter_count < max_iterations:
+        # 1. Agent chooses an action (which neighborhood k to use)
+        action_k = choose_action(current_state, q_table, actions, epsilon)
         
-#         # 2. Perform the action (shake the solution)
-#         Y_shaken = shake(Y_best, action_k, data)
-#         cost_shaken = evaluate_solution(Y_shaken, sub_model, capacity_constrs, data)
+        # 2. Perform the action (shake the solution)
+        Y_shaken = shake(Y_best, action_k, data)
+        cost_shaken = evaluate_solution(Y_shaken, sub_model, capacity_constrs, data)
         
-#         # 3. Determine the reward and the next state
-#         if cost_shaken < cost_best:
-#             reward = 1
-#             next_state = 0 # "Improvement" state
-#             objective_history.append(cost_best)
-#             # Update the best solution found so far
-#             Y_best = Y_shaken
-#             cost_best = cost_shaken
-#             print(f"Iter {iter_count}: New best found (k={action_k}) -> Cost: {cost_best:.2f}")
-#             time_history.append(time.time() - start_vns_time)
-#             cost_history.append(cost_best)
-#         else:
-#             reward = -1
-#             next_state = 1 # "Stagnation" state
-        
-#         # 4. Update the Q-table with the experience
-#         update_q_table(q_table, current_state, action_k, reward, next_state, alpha, gamma)
-        
-#         # 5. Transition to the next state for the next iteration
-#         current_state = next_state
-        
-#         iter_count += 1
-        
-#     return Y_best, cost_best, time_history, cost_history
-
-
-
-class QLearningAgent:
-    """A simple Q-Learning agent."""
-    def __init__(self, n_observations, n_actions, alpha=0.1, gamma=0.9, epsilon=0.1):
-        self.n_observations = n_observations
-        self.n_actions = n_actions
-        self.alpha = alpha   # Learning rate
-        self.gamma = gamma   # Discount factor
-        self.epsilon = epsilon # Exploration rate
-
-        # Initialize Q-table with zeros
-        self.q_table = np.zeros((n_observations, n_actions))
-
-    def choose_action(self, observation):
-        """Choose an action using an epsilon-greedy policy."""
-        if np.random.uniform(0, 1) < self.epsilon:
-            return np.random.choice(self.n_actions) # Explore
+        # 3. Determine the reward and the next state
+        if cost_shaken < cost_best:
+            reward = 1
+            next_state = 0 # "Improvement" state
+            objective_history.append(cost_best)
+            # Update the best solution found so far
+            Y_best = Y_shaken
+            cost_best = cost_shaken
+            print(f"Iter {iter_count}: New best found (k={action_k}) -> Cost: {cost_best:.2f}")
+            time_history.append(time.time() - start_vns_time)
+            cost_history.append(cost_best)
         else:
-            # Exploit: choose the best known action
-            return np.argmax(self.q_table[observation, :])
-
-    def update(self, obs, action, reward, next_obs):
-        """Update the Q-table using the Bellman equation."""
-        old_value = self.q_table[obs, action]
-        next_max = np.max(self.q_table[next_obs, :])
+            reward = -1
+            next_state = 1 # "Stagnation" state
         
-        # Q-learning formula
-        new_value = (1 - self.alpha) * old_value + self.alpha * (reward + self.gamma * next_max)
-        self.q_table[obs, action] = new_value
-   
-
-if __name__ == "__main__":
-    # --- Hyperparameters ---
-    MAX_ITERATIONS = 100
-    K_MAX = 4
-    ALPHA = 0.1  # Learning Rate
-    GAMMA = 0.9  # Discount Factor
-    EPSILON = 0.1 # Exploration Rate
-
-    print("--- Starting QL-VNS with Gymnasium ---")
-    start_time = time.time()
-
-    # 1. Instantiate the Environment and the Agent
-    env = VNSEnv(problem_data=problem_data, k_max=K_MAX)
-    agent = QLearningAgent(
-        n_observations=env.observation_space.n,
-        n_actions=env.action_space.n,
-        alpha=ALPHA, gamma=GAMMA, epsilon=EPSILON
-    )
-
-    # 2. Run the Training Loop
-    observation, info = env.reset()
-    for i in range(MAX_ITERATIONS):
-        # Agent chooses an action
-        action = agent.choose_action(observation)
+        # 4. Update the Q-table with the experience
+        update_q_table(q_table, current_state, action_k, reward, next_state, alpha, gamma)
         
-        # Environment executes the action
-        next_observation, reward, terminated, truncated, info = env.step(action)
+        # 5. Transition to the next state for the next iteration
+        current_state = next_state
         
-        # Agent learns from the experience
-        agent.update(observation, action, reward, next_observation)
+        iter_count += 1
         
-        # Update the state for the next iteration
-        observation = next_observation
-
-        if (i + 1) % 10 == 0:
-            print(f"Iteration {i+1}/{MAX_ITERATIONS} | Current Best Cost: {info['best_cost']:.2f}")
-
-    # 3. Clean up and show results
-    env.close()
-    end_time = time.time()
+    # end_vns_time = time.time()
+    #print(f"\n--- Q-VNS Finished in {end_vns_time - start_vns_time:.2f} seconds ---")
     
-    print(f"\n--- Training Finished in {end_time - start_time:.2f} seconds ---")
+    # Also print the learned policy for analysis
+    #print("\nLearned Q-Table:")
+    # for s in states:
+    #     state_name = "Improvement" if s == 0 else "Stagnation"
+    #     #print(f"  State: {state_name}")
+    #     for a in actions:
+    #         print(f"    Action k={a}: Q-value = {q_table[s][a]:.3f}")
+            
+    return Y_best, cost_best, time_history, cost_history
 
-    # Extract the final results from the environment
-    Y_opt = env.Y_best
-    cost_opt = env.cost_best
-    
-    print("\nLearned Q-Table:")
-    print(agent.q_table)
+# --- Execute the Algorithm ---
+# if __name__ == "__main__":
+# You will need to have your other functions (generate_greedy, shake, etc.) defined
+Y_opt, cost_opt, t_hist_ql, c_hist_ql = Q_VNS(max_iterations=100, data=problem_data)
 
-    print("\n=====================================")
-    print("           Final Results")
-    print("=====================================")
-    print("\nOptimal Investment Plan (Y):")
-    print(Y_opt)
-    print(f"\nOptimal Cost Found: {cost_opt:.2f}")
-    print("=====================================")
+# print("\n=====================================")
+# print("           Final Results")
+# print("=====================================")
+# print("\nOptimal Investment Plan (Y):")
+# print(Y_opt)
+print(f"Z = {np.round(cost_opt,2)}")
+print(f"{NB_I}, {NB_S}, {NB_T}")
+# print("=====================================")
+# end_time = time.process_time()
+print(f"Total process time : {np.round(time.process_time() -start_time,2)} second")
+# plot_convergence(obj_history)
