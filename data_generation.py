@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-NB_I = 2
-NB_S = 3
-NB_T = 4
+NB_I = 5
+NB_S = 4
+NB_T = 10
 
 T = range(NB_T)
 I = range(NB_I)
@@ -48,7 +48,7 @@ pC = np.round(np.random.uniform(68.88, 80.12,(NB_S, NB_T)),2)
 sold_price = np.round(np.random.uniform(30, 40, (NB_S, NB_T)),2)
 buy_price = np.round(1.4*sold_price,2)
 
-eC = np.round(np.random.uniform(0.91, 1.65, (NB_S, NB_T)),2)
+eC = np.round(np.random.uniform(2, 4, (NB_S, NB_T)),2)
 eO = np.round(np.random.uniform(-6.38, 0.53, (NB_S, NB_T)),2)
 # eO = np.round(np.random.uniform(0.38, 0.53, (NB_S, NB_T)),2)
 

@@ -22,7 +22,6 @@ XO = model.addVars(S,T,lb=0,name="XO")  # LEF
 XC = model.addVars(S,T,lb=0,name="XC")  # CF
 Buy = model.addVars(S,T,lb=0,name="Buy")
 Sold = model.addVars(S,T,lb=0,name="Sold")
-M = 1000000000
 
 # === Objective Function ===
 # First-stage cost
