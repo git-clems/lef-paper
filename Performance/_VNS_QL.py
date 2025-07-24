@@ -1,5 +1,5 @@
 import numpy as np
-from Data.instance_5 import *
+from Data.instance_1 import *
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -11,14 +11,12 @@ start_time = time.process_time()
 V = 200
 u = 70
 
-
 problem_data = {
-    'T': T, 'I': I, 'S': S, 'NB_T': NB_T, 'NB_I': NB_I, 'NB_S': NB_S, 'b': b, 'd': d, 
+    'T': T, 'I': I, 'S': S, 'P': P, 'NB_I': NB_I, 'NB_T': NB_T, 'NB_P': NB_P, 'NB_S': NB_S, 'b': b, 'd': d, 
     'V': V, 'u': u, 'prob': prob, 'pO': pO, 'pC': pC, 
-    'buy_price': buy_price, 'sold_price': sold_price, 
+    'buy_price': buy_price, 'sold_price': sold_price,
     'eO': eO, 'eC': eC, 'E_max': E_max
 }
-
 
 # def plot_convergence(history):
 #     plt.plot(history, label="Z (Objective)")
@@ -92,7 +90,7 @@ def generate_greedy_initial_solution(data):
     avg_demand = {t: np.mean([d[s, t] for s in S]) for t in T}
     
     cumulative_capacity = 0.0
-
+    
     #print("--- Running Greedy Heuristic ---")
     for t in T:
         # Check if we need more capacity for the current period
@@ -218,33 +216,34 @@ def create_subproblem_model(data):
     sub_model.setParam('OutputFlag', 0)
     
     # Unpack data
-    S, T, prob, pO, pC, buy_price, sold_price, d, eO, eC, E_max = (
-        data['S'], data['T'], data['prob'], data['pO'], data['pC'], 
+    S, T, P, prob, pO, pC, buy_price, sold_price, d, eO, eC, E_max = (
+        data['S'], data['T'], data['P'], data['prob'], data['pO'], data['pC'], 
         data['buy_price'], data['sold_price'], data['d'], data['eO'], data['eC'], data['E_max']
     )
-
+    
     # Define all variables
-    XO = sub_model.addVars(S, T, lb=0, name="XO")
-    XC = sub_model.addVars(S, T, lb=0, name="XC")
+    XO = sub_model.addVars(S,T,P, lb=0,name="XO")  # LEF
+    XC = sub_model.addVars(S,T,P, lb=0,name="XC")  # CF
     Buy = sub_model.addVars(S, T, lb=0, name="Buy")
     Sold = sub_model.addVars(S, T, lb=0, name="Sold")
     
     # Define objective
-    oper_cost = quicksum(prob[s] * (pO[s,t] * XO[s,t] + pC[s,t] * XC[s,t]) for t in T for s in S)
+    oper_cost = quicksum(prob[s] *(pO[s,t,j] * XO[s,t,j] + pC[s,t,j] * XC[s,t,j]) for t in T for s in S for j in P)
     carbon_cost = quicksum(prob[s] * (buy_price[s,t] * Buy[s,t] - sold_price[s,t] * Sold[s,t]) for t in T for s in S)
     sub_model.setObjective(oper_cost + carbon_cost, GRB.MINIMIZE)
     
     # Add constraints that DO NOT depend on Y
     for s in S:
         for t in T:
-            sub_model.addConstr(XO[s,t] + XC[s,t] == d[s,t])
-            sub_model.addConstr(eO[s,t] * XO[s,t] + eC[s,t] * XC[s,t] + Sold[s,t] <= E_max[t] + Buy[s,t])
+            for j in P:
+                sub_model.addConstr(XO[s,t,j] + XC[s,t,j] == d[s,t,j],name=f"demand_{s}_{t}")
+            sub_model.addConstr(sum(eO[s,t,j] * XO[s,t,j] + eC[s,t,j] * XC[s,t,j] for j in P) + Sold[s,t] <= E_max[t] + Buy[s,t],name=f"emissions_{s}_{t}")
 
     # Add PLACEHOLDER capacity constraints. We will update the RHS later.
     capacity_constrs = {}
     for s in S:
         for t in T:
-            capacity_constrs[s, t] = sub_model.addConstr(XO[s,t] <= 0, name=f"capacity_{s}_{t}")
+            capacity_constrs[s, t] = sub_model.addConstr(sum(XO[s,t,j] for j in P) <= 0, name=f"capacity_{s}_{t}")
             
     sub_model.update()
     # Return the model and the handles to the constraints we need to update
@@ -294,13 +293,14 @@ def Q_VNS(max_iterations, data, alpha=0.1, gamma=0.9, epsilon=0.1):
 
     # --- Q-Learning Setup ---
     states = [0, 1]  # 0: Improvement, 1: Stagnation
-    actions = list(range(1, 4)) # Corresponds to k=1, 2, 3, 4
+    actions = list(range(1, 5)) # Corresponds to k=1, 2, 3, 4
     q_table = initialize_q_table(states, actions)
-    print(q_table)
+    # print(q_table)
     
     # --- VNS Initialization ---
     sub_model, capacity_constrs = create_subproblem_model(data)
-    Y_best = generate_greedy_initial_solution(data)
+    # Y_best = generate_greedy_initial_solution(data)
+    Y_best = np.zeros((NB_T,NB_I))
 
     cost_best = evaluate_solution(Y_best, sub_model, capacity_constrs, data)
 
@@ -359,15 +359,9 @@ def Q_VNS(max_iterations, data, alpha=0.1, gamma=0.9, epsilon=0.1):
 # --- Execute the Algorithm ---
 # if __name__ == "__main__":
 # You will need to have your other functions (generate_greedy, shake, etc.) defined
-Y_opt, cost_opt, t_hist_ql, c_hist_ql = Q_VNS(max_iterations=100, data=problem_data)
-
-# print("\n=====================================")
-# print("           Final Results")
-# print("=====================================")
-# print("\nOptimal Investment Plan (Y):")
-# print(Y_opt)
+Y_opt, cost_opt, t_hist_ql, c_hist_ql = Q_VNS(max_iterations=500, data=problem_data)
 print(f"Z = {np.round(cost_opt,2)}")
-print(f"{NB_I}, {NB_S}, {NB_T}")
+print(f"{NB_I}, {NB_S}, {NB_T}, {NB_P}")
 # print("=====================================")
 # end_time = time.process_time()
 print(f"Total process time : {np.round(time.process_time() -start_time,2)} second")
