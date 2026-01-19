@@ -1,5 +1,5 @@
 import numpy as np
-from Data.instance_1 import *
+from Data.instance_7 import *
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -19,10 +19,11 @@ def plot_convergence(history):
     plt.show()
 
 # === Parameters ===
-V = 200
-u = 70
 # MAX_NEIGHBORHOOD = 3
 # MAX_ITER = 10
+
+V = 200
+u = 70
 
 
 problem_data = {
@@ -31,7 +32,6 @@ problem_data = {
     'buy_price': buy_price, 'sold_price': sold_price,
     'eO': eO, 'eC': eC, 'E_max': E_max
 }
-
 
 
 def generate_greedy_initial_solution(data):
@@ -200,16 +200,14 @@ def create_subproblem_model(data):
     sub_model.setObjective(oper_cost + carbon_cost, GRB.MINIMIZE)
     
     # Add constraints that DO NOT depend on Y
+    capacity_constrs = {}
     for s in S:
         for t in T:
             for j in P:
                 sub_model.addConstr(XO[s,t,j] + XC[s,t,j] == d[s,t,j],name=f"demand_{s}_{t}")
             sub_model.addConstr(sum(eO[s,t,j] * XO[s,t,j] + eC[s,t,j] * XC[s,t,j] for j in P) + Sold[s,t] <= E_max[t] + Buy[s,t],name=f"emissions_{s}_{t}")
 
-    # Add PLACEHOLDER capacity constraints. We will update the RHS later.
-    capacity_constrs = {}
-    for s in S:
-        for t in T:
+            # Add PLACEHOLDER capacity constraints. We will update the RHS later.
             capacity_constrs[s, t] = sub_model.addConstr(sum(XO[s,t,j] for j in P)<= 0, name=f"capacity_{s}_{t}")
             
     sub_model.update()
@@ -279,6 +277,7 @@ def VNS(k_max, max_iterations,data):
                 time_history.append(time.time() - start_vns_time)
                 cost_history.append(cost_best)
             else:
+                print(f"Iter {iter}: No improvment")
                 k = k + 1 #No improvement, try a bigger shake
         
         iter = iter + 1
@@ -286,7 +285,7 @@ def VNS(k_max, max_iterations,data):
     return Y_best, cost_best, time_history, cost_history
 
 
-Y_opt, cost_opt, t_hist_vns, c_hist_vns = VNS(k_max=4, max_iterations=500, data=problem_data)
+Y_opt, cost_opt, t_hist_vns, c_hist_vns = VNS(k_max=4, max_iterations=100, data=problem_data)
 
 # print(Y_opt)
 print(f"Z = {np.round(cost_opt,2)}")

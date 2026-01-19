@@ -2,12 +2,14 @@ import numpy as np
 import random
 import time
 from gurobipy import Model, GRB, quicksum
-from Data.instance_7 import * # ASSUMPTION: This file now contains P, NB_P, and product-indexed data
-
+from Data.instance_7 import *
 start_time = time.process_time()
 
 # --- 1. Bundle Data for Cleanliness and Portability ---
 # Added P and NB_P for products
+
+MAX_ITER = 100
+K_MAX = 4
 
 V = 200
 u = 70
@@ -19,6 +21,7 @@ problem_data = {
     'pO': pO, 'pC': pC, 'buy_price': buy_price, 'sold_price': sold_price, 
     'eO': eO, 'eC': eC, 'E_max': E_max
 }
+
 
 # --- 2. Heuristic for Initial Solution (Modified for Multi-Product) ---
 def generate_greedy_initial_solution(data):
@@ -127,15 +130,10 @@ def create_subproblem_model(data):
                 sub_model.addConstr(XO[s,t,j] + XC[s,t,j] == d[s,t,j])
             
             # --- MODIFICATION: Emissions are summed over all products ---
-            sub_model.addConstr(
-                quicksum(eO[s,t,j]*XO[s,t,j] + eC[s,t,j]*XC[s,t,j] for j in P) + Sold[s,t] <= E_max[t] + Buy[s,t]
-            )
+            sub_model.addConstr(quicksum(eO[s,t,j]*XO[s,t,j] + eC[s,t,j]*XC[s,t,j] for j in P) + Sold[s,t] <= E_max[t] + Buy[s,t])
 
     # --- MODIFICATION: Capacity constraint sums renewable production over all products ---
-    capacity_constrs = { 
-        (s,t): sub_model.addConstr(quicksum(XO[s,t,j] for j in P) <= 0) 
-        for s in S for t in T 
-    }
+    capacity_constrs = { (s,t): sub_model.addConstr(quicksum(XO[s,t,j] for j in P) <= 0) for s in S for t in T }
             
     sub_model.update()
     return sub_model, capacity_constrs
@@ -152,7 +150,9 @@ def evaluate_solution(Y, sub_model, capacity_constrs, data):
     for s in S:
         for t in T:
             # Update RHS of the placeholder capacity constraint. This logic is UNCHANGED.
-            capacity_constrs[s, t].RHS = cumulative_capacity[t]
+            # capacity_constrs[s, t].RHS = cumulative_capacity[t]
+            capacity_constrs[(s, t)].RHS = float(cumulative_capacity[t])
+
     
     sub_model.optimize()
     
@@ -194,13 +194,13 @@ def VNS(k_max, max_iterations, data):
 
 # --- 6. Execute the Algorithm ---
 if __name__ == "__main__":
-    Y_opt, cost_opt = VNS(k_max=4, max_iterations=50, data=problem_data)
+    Y_opt, cost_opt = VNS(k_max=K_MAX, max_iterations=MAX_ITER, data=problem_data)
 
-    # print("\n=====================================")
-    # print("           Final Results")
-    # print("=====================================")
-    # print("\nOptimal Investment Plan (Y):")
-    # print(Y_opt)
+    print("\n=====================================")
+    print("           Final Results")
+    print("=====================================")
+    print("\nOptimal Investment Plan (Y):")
+    print(Y_opt)
     with open(f'Performance/Note/collection.txt',"a") as file:
         file.write(f"{np.round(cost_opt,2)} \t {np.round(time.process_time()-start_time,2)}\n")
     print(f"Total process time : {np.round(time.process_time() -start_time,2)} second")

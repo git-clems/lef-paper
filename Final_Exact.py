@@ -1,5 +1,5 @@
 from gurobipy import Model,GRB,quicksum
-from Final_data import*
+from data import*
 import time
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -115,88 +115,89 @@ if model.status == GRB.OPTIMAL:
     for i in range(1, len(T)):
         plt.axvline(x=i - 0.5, color='black', linestyle='--', linewidth=0.5)
 
-    plt.xlabel("Period")
-    plt.ylabel("LEF based tea production (ton)")
-    # plt.title("Émissions par période pour chaque scénario")
-    plt.xticks(x, [t + 1 for t in T])  # afficher périodes à partir de 1
-    # plt.grid(True, axis='y')
-    plt.legend(title="Scenario")
+    plt.xlabel("Periods",  fontsize=25)
+    plt.ylabel("LEF based tea production (ton)",  fontsize=25)
+    plt.xticks(x, [t + 1 for t in T], fontsize = 20)  # afficher périodes à partir de 1
+    plt.yticks(fontsize=25)  # afficher périodes à partir de 1
+    plt.legend(title="Scenario",  fontsize=12)
     plt.tight_layout()
     plt.show()
 
     
         
-    # # === Calcul des émissions moyennes par période ===
-    # emission_per_period = [
-    #     sum(prob[s] * (eO[s,t] * XO_val[s,t] + eC[s,t] * XC_val[s,t]) for s in S)
-    #     for t in T
-    # ]
+    # === Calcul des émissions moyennes par période ===
+    emission_per_period = [
+        sum(prob[s] * (eO[s,t] * XO_val[s,t] + eC[s,t] * XC_val[s,t]) for s in S)
+        for t in T
+    ]
 
-    # # === Calcul des coûts moyens par période ===
-    # install_cost_per_period = [
-    #     sum(V * b[i] * Y_val[t,i] for i in I) + sum(u * b[i] * Y_val[tp,i]for i in I for tp in range(t + 1))
-    #     for t in T 
-    # ]
-    # product_cost_per_period = [
-    #     sum(prob[s] *(pO[s,t] * XO_val[s,t] + pC[s,t] * XC_val[s,t]) for s in S)
-    #     for t in T 
-    # ]
-    # trade__cost_per_period = [
-    #     sum(prob[s] *(buy_price[s,t] * Buy_val[s,t] - sold_price[s,t] * Sold_val[s,t]) for s in S)
-    #     for t in T 
-    # ]
+    # === Calcul des coûts moyens par période ===
+    install_cost_per_period = [
+        sum(V * b[i] * Y_val[t,i] for i in I) + sum(u * b[i] * Y_val[tp,i]for i in I for tp in range(t + 1))
+        for t in T 
+    ]
+    product_cost_per_period = [
+        sum(prob[s] *(pO[s,t] * XO_val[s,t] + pC[s,t] * XC_val[s,t]) for s in S)
+        for t in T 
+    ]
+    trade__cost_per_period = [
+        sum(prob[s] *(buy_price[s,t] * Buy_val[s,t] - sold_price[s,t] * Sold_val[s,t]) for s in S)
+        for t in T 
+    ]
     
-    # # === Figure 1 : Émissions ===
-    # plt.figure(figsize=(10, 5))
-    # plt.plot(T, emission_per_period, marker='*', color='black', label="Total emission per period")
-    # plt.plot(T, E_max, marker='x', color='orange', linestyle = "--", label="Emission cap per period")
-    # # plt.title("Émission moyenne par période")
-    # plt.ylabel("GHG emission (tCO₂-eq)")
-    # plt.xlabel("Period")
-    # plt.xticks(x, [t+1 for t in T])
-    # plt.grid(True)
-    # plt.legend()
-    # plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
-    # plt.tight_layout()
-    # plt.axhline(y=0)
-    # plt.show()
+    # === Figure 1 : Émissions ===
+    plt.figure(figsize=(10, 5))
+    plt.plot(T, emission_per_period, marker='*', color='black', label="Total emission per period")
+    plt.plot(T, E_max, marker='x', color='orange', linestyle = "--", label="Emission cap per period")
+    # plt.title("Émission moyenne par période")
+    plt.ylabel("GHG emission (tCO₂-eq)", fontsize=25)
+    plt.xlabel("Periods", fontsize=25)
+    plt.xticks(x, [t+1 for t in T], fontsize = 20)
+    plt.yticks(fontsize = 20)
+    plt.grid(True)
+    plt.legend()
+    plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
+    plt.tight_layout()
+    plt.axhline(y=0)
+    plt.show()
     
     
-    # bar_width = 0.6
+    bar_width = 0.6
 
-    # # Convertir en array pour simplifier les opérations
-    # install = np.array(install_cost_per_period)
-    # prod = np.array(product_cost_per_period)
-    # trade = np.array(trade__cost_per_period)
+    # Convertir en array pour simplifier les opérations
+    install = np.array(install_cost_per_period)
+    prod = np.array(product_cost_per_period)
+    trade = np.array(trade__cost_per_period)
 
-    # # Séparer les valeurs positives et négatives du trading
-    # trade_pos = np.where(trade > 0, trade, 0)
-    # trade_neg = np.where(trade < 0, trade, 0)
+    # Séparer les valeurs positives et négatives du trading
+    trade_pos = np.where(trade > 0, trade, 0)
+    trade_neg = np.where(trade < 0, trade, 0)
 
-    # # Tracer chaque composante empilée correctement
-    # plt.figure(figsize=(10, 6))
+    # Tracer chaque composante empilée correctement
+    plt.figure(figsize=(10, 6))
 
-    # # Couche 1 : installation
-    # p1 = plt.bar(x, install, width=bar_width, label="LEF system installation + maintenance", color='blue')
+    # Couche 1 : installation
+    p1 = plt.bar(x, install, width=bar_width, label="LEF system installation + maintenance", color='blue')
 
-    # # Couche 2 : production empilée sur installation
-    # p2 = plt.bar(x, prod, width=bar_width, bottom=install, label="Tea production", color='orange')
+    # Couche 2 : production empilée sur installation
+    p2 = plt.bar(x, prod, width=bar_width, bottom=install, label="Tea production", color='orange')
 
-    # # Couche 3a : trading positif (empilé au-dessus du reste)
-    # p3a = plt.bar(x, trade_pos, width=bar_width, bottom=install + prod, label="Cost penalty (emission > cap)", color='red')
+    # Couche 3a : trading positif (empilé au-dessus du reste)
+    p3a = plt.bar(x, trade_pos, width=bar_width, bottom=install + prod, label="Cost penalty (emission > cap)", color='red')
 
-    # # Couche 3b : trading négatif (empilé vers le bas)
-    # p3b = plt.bar(x, trade_neg, width=bar_width, label="Cost reduction (emissiion < cap)", color='green')
+    # Couche 3b : trading négatif (empilé vers le bas)
+    p3b = plt.bar(x, trade_neg, width=bar_width, label="Cost reduction (emissiion < cap)", color='green')
 
-    # # plt.title("Coût moyen par période (barres empilées avec gains/pertes)")
-    # plt.ylabel("Average cost ($)")
-    # plt.xlabel("Period")
-    # plt.xticks(x, [t+1 for t in T])
+    # plt.title("Coût moyen par période (barres empilées avec gains/pertes)")
+    plt.ylabel("Average cost ($)", fontsize=25)
+    plt.xlabel("Periods", fontsize=25)
+    plt.xticks(x, [t+1 for t in T], fontsize=25)
+    plt.yticks(fontsize=25)
     
-    # plt.grid(True, axis='y')
-    # plt.legend(title = "Costs")
-    # plt.tight_layout()
-    # plt.show()
+    plt.grid(True, axis='y')
+    plt.legend(title = "Costs")
+    plt.tight_layout()
+    plt.show()
 
 elif model.status == GRB.INFEASIBLE:
     print("Model is infeasible.")

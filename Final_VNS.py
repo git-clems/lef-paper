@@ -1,5 +1,5 @@
 import numpy as np
-from data import *
+from Final_data import *
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -285,10 +285,10 @@ def VNS(k_max, max_iterations,data):
     return Y_best, cost_best, time_history, cost_history
 
 
-Y_opt, cost_opt, t_hist_vns, c_hist_vns = VNS(k_max=4, max_iterations=500, data=problem_data)
+Y_opt, cost_opt, t_hist_vns, c_hist_vns = VNS(k_max=8, max_iterations=200, data=problem_data)
 
 # print(Y_opt)
 print(f"Z = {np.round(cost_opt,2)}")
 print(f"{NB_I}, {NB_S}, {NB_T}")
 print(f"Runing time : {np.round(time.process_time() - start_time,2)}")
-# print(objective_history)
+# print(c_hist_vns)

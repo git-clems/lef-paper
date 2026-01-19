@@ -1,5 +1,5 @@
 import numpy as np
-from Data.instance_1 import *
+from Data.instance_7 import *
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -359,7 +359,7 @@ def Q_VNS(max_iterations, data, alpha=0.1, gamma=0.9, epsilon=0.1):
 # --- Execute the Algorithm ---
 # if __name__ == "__main__":
 # You will need to have your other functions (generate_greedy, shake, etc.) defined
-Y_opt, cost_opt, t_hist_ql, c_hist_ql = Q_VNS(max_iterations=500, data=problem_data)
+Y_opt, cost_opt, t_hist_ql, c_hist_ql = Q_VNS(max_iterations=1000, data=problem_data)
 print(f"Z = {np.round(cost_opt,2)}")
 print(f"{NB_I}, {NB_S}, {NB_T}, {NB_P}")
 # print("=====================================")

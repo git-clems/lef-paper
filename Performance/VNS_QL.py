@@ -5,7 +5,7 @@ from gurobipy import Model, GRB, quicksum
 from Data.instance_7 import * # ASSUMPTION: This file contains P, and product-indexed data
 
 ITER_MAX = 200
-K_MAX = 5
+K_MAX = 4
 V, u = 200, 70
 
 def generate_greedy_initial_solution(data):
@@ -138,7 +138,7 @@ def update_q_table(q_table, state, action, reward, next_state, alpha, gamma):
 
 # --- 3. MAIN Q-LEARNING VNS PROCEDURE ---
 
-def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.9, epsilon=0.1):
+def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.9, epsilon=0.9):
     """Performs a VNS search guided by a Q-Learning agent."""
     print("--- Starting Q-Learning VNS for Multi-Product Problem ---")
     start_vns_time = time.time()
