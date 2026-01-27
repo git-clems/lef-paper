@@ -1,0 +1,13 @@
+Gurobi    	 VNS       	 VNS-QL    	 AS        	 AS-QL      	 Gurobi 	 VNS 	 VNS-QL	 AS   	 AS-QL	 Gurobi 	 VNS	 VNS-QL	 AS 	 AS-QL
+32180.93  	 nan       	 nan       	 nan       	 nan        	 0.0000%	 nan 	 nan   	 nan  	 nan  	 0.007  	 nan	 nan   	 nan	 nan
+54357.74  	 nan       	 nan       	 nan       	 nan        	 0.0000%	 nan 	 nan   	 nan  	 nan  	 0.293  	 nan	 nan   	 nan	 nan
+122007.72 	 nan       	 nan       	 nan       	 nan        	 0.0000%	 nan 	 nan   	 nan  	 nan  	 0.197  	 nan	 nan   	 nan	 nan
+163222.54 	 nan       	 nan       	 nan       	 nan        	 0.0080%	 nan 	 nan   	 nan  	 nan  	 1.314  	 nan	 nan   	 nan	 nan
+638062.68 	 nan       	 nan       	 nan       	 nan        	 0.0027%	 nan 	 nan   	 nan  	 nan  	 15.108 	 nan	 nan   	 nan	 nan
+722204.33 	 nan       	 nan       	 nan       	 nan        	 0.0009%	 nan 	 nan   	 nan  	 nan  	 84.661 	 nan	 nan   	 nan	 nan
+1295791.33	 nan       	 nan       	 nan       	 nan        	 0.0004%	 nan 	 nan   	 nan  	 nan  	 187.92 	 nan	 nan   	 nan	 nan
+1514593.07	 1516871.41	 1514618.44	 1532085.41	 1553050.935	 0.0003%	 0.15	 0.002 	 1.155	 2.539	 451.003	 nan	 nan   	 nan	 46.27
+nan       	 nan       	 nan       	 nan       	 nan        	 nan    	 nan 	 nan   	 nan  	 nan  	 nan    	 nan	 nan   	 nan	 nan
+nan       	 nan       	 nan       	 nan       	 nan        	 nan    	 nan 	 nan   	 nan  	 nan  	 nan    	 nan	 nan   	 nan	 nan
+nan       	 nan       	 nan       	 nan       	 nan        	 nan    	 nan 	 nan   	 nan  	 nan  	 nan    	 nan	 nan   	 nan	 nan
+nan       	 nan       	 nan       	 nan       	 nan        	 nan    	 nan 	 nan   	 nan  	 nan  	 nan    	 nan	 nan   	 nan	 nan

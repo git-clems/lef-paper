@@ -1,54 +1,56 @@
 import numpy as np
 
-NB_I = 10
+NB_I = 5
 NB_S = 4
 NB_T = 10
 I = range(NB_I)
 T = range(NB_T)
 S = range(NB_S)
 
-prob = np.array ( [np.float64(0.25), np.float64(0.25), np.float64(0.25), np.float64(0.25)] )
-b = np.array ( [np.float64(6.1), np.float64(6.43), np.float64(6.21), np.float64(6.09), np.float64(5.85), np.float64(6.29), np.float64(5.88), np.float64(6.78), np.float64(6.93), np.float64(5.77)] )
-E_max = np.array ( [45, np.float64(36.0), np.float64(28.8), np.float64(23.04), np.float64(18.43), np.float64(14.75), np.float64(11.8), 11.25, 11.25, 11.25] )
-d = np.array ( [
-	[np.float64(21.88), np.float64(17.93), np.float64(18.52), np.float64(23.88), np.float64(11.07), np.float64(11.31), np.float64(10.3), np.float64(22.49), np.float64(21.67), np.float64(23.05)],
-	[np.float64(49.47), np.float64(44.98), np.float64(36.54), np.float64(44.51), np.float64(27.96), np.float64(41.0), np.float64(28.58), np.float64(48.62), np.float64(38.05), np.float64(35.37)],
-	[np.float64(56.61), np.float64(69.36), np.float64(61.4), np.float64(64.21), np.float64(50.47), np.float64(65.44), np.float64(65.3), np.float64(65.42), np.float64(73.59), np.float64(67.05)],
-	[np.float64(83.99), np.float64(85.93), np.float64(92.44), np.float64(76.51), np.float64(91.67), np.float64(91.77), np.float64(80.26), np.float64(78.22), np.float64(82.89), np.float64(84.09)],
-] )
-eC = np.array ( [
-	[np.float64(1.3), np.float64(0.95), np.float64(1.06), np.float64(0.92), np.float64(1.5), np.float64(1.08), np.float64(1.17), np.float64(1.6), np.float64(1.43), np.float64(0.93)],
-	[np.float64(1.03), np.float64(1.37), np.float64(1.34), np.float64(1.09), np.float64(1.6), np.float64(1.36), np.float64(1.31), np.float64(1.35), np.float64(1.45), np.float64(1.14)],
-	[np.float64(1.2), np.float64(1.07), np.float64(1.05), np.float64(1.61), np.float64(1.46), np.float64(1.27), np.float64(1.08), np.float64(1.1), np.float64(0.95), np.float64(1.23)],
-	[np.float64(1.14), np.float64(1.43), np.float64(1.19), np.float64(1.04), np.float64(0.93), np.float64(0.96), np.float64(1.41), np.float64(1.25), np.float64(1.31), np.float64(1.57)],
-] )
-eO = np.array ( [
-	[np.float64(0.46), np.float64(-4.88), np.float64(-1.8), np.float64(-4.56), np.float64(-6.24), np.float64(-1.14), np.float64(-4.17), np.float64(-3.73), np.float64(-2.31), np.float64(-0.64)],
-	[np.float64(-2.03), np.float64(-0.35), np.float64(-4.49), np.float64(-0.87), np.float64(-5.1), np.float64(0.2), np.float64(-1.63), np.float64(-4.89), np.float64(0.17), np.float64(-1.33)],
-	[np.float64(-4.63), np.float64(-4.91), np.float64(-2.8), np.float64(-6.2), np.float64(-4.95), np.float64(-3.45), np.float64(-3.79), np.float64(-3.18), np.float64(-4.46), np.float64(-2.33)],
-	[np.float64(-0.41), np.float64(-5.57), np.float64(-2.8), np.float64(-5.47), np.float64(-1.43), np.float64(-3.64), np.float64(-2.47), np.float64(-5.11), np.float64(-5.38), np.float64(-3.01)],
-] )
-pO = np.array ( [
-	[np.float64(120.46), np.float64(118.09), np.float64(127.98), np.float64(112.04), np.float64(113.96), np.float64(113.1), np.float64(121.95), np.float64(114.76), np.float64(118.59), np.float64(114.6)],
-	[np.float64(113.06), np.float64(112.19), np.float64(122.01), np.float64(112.69), np.float64(113.74), np.float64(116.83), np.float64(124.97), np.float64(111.95), np.float64(125.27), np.float64(111.93)],
-	[np.float64(127.77), np.float64(118.63), np.float64(127.77), np.float64(121.08), np.float64(123.5), np.float64(110.9), np.float64(115.29), np.float64(112.36), np.float64(115.53), np.float64(112.34)],
-	[np.float64(115.92), np.float64(117.65), np.float64(111.35), np.float64(122.66), np.float64(120.39), np.float64(114.97), np.float64(119.61), np.float64(111.89), np.float64(120.56), np.float64(126.92)],
-] )
-pC = np.array ( [
-	[np.float64(72.46), np.float64(76.38), np.float64(70.36), np.float64(76.93), np.float64(72.13), np.float64(70.94), np.float64(75.47), np.float64(69.11), np.float64(78.2), np.float64(68.93)],
-	[np.float64(76.5), np.float64(71.91), np.float64(77.14), np.float64(79.69), np.float64(71.68), np.float64(75.36), np.float64(75.53), np.float64(75.31), np.float64(71.39), np.float64(79.59)],
-	[np.float64(73.91), np.float64(78.39), np.float64(76.74), np.float64(72.22), np.float64(78.03), np.float64(73.34), np.float64(78.78), np.float64(75.41), np.float64(78.79), np.float64(76.66)],
-	[np.float64(77.03), np.float64(74.51), np.float64(79.63), np.float64(76.12), np.float64(73.64), np.float64(75.7), np.float64(69.1), np.float64(72.27), np.float64(76.3), np.float64(72.14)],
-] )
-sold_price = np.array ( [
-	[np.float64(36.18), np.float64(34.29), np.float64(31.35), np.float64(32.98), np.float64(35.7), np.float64(35.91), np.float64(35.74), np.float64(36.53), np.float64(36.52), np.float64(34.31)],
-	[np.float64(38.97), np.float64(33.68), np.float64(34.36), np.float64(38.92), np.float64(38.06), np.float64(37.04), np.float64(31.0), np.float64(39.19), np.float64(37.14), np.float64(39.99)],
-	[np.float64(31.49), np.float64(38.68), np.float64(31.62), np.float64(36.16), np.float64(31.24), np.float64(38.48), np.float64(38.07), np.float64(35.69), np.float64(34.07), np.float64(30.69)],
-	[np.float64(36.97), np.float64(34.54), np.float64(37.22), np.float64(38.66), np.float64(39.76), np.float64(38.56), np.float64(30.12), np.float64(33.6), np.float64(37.3), np.float64(31.72)],
-] )
-buy_price = np.array ( [
-	[np.float64(43.42), np.float64(41.15), np.float64(37.62), np.float64(39.58), np.float64(42.84), np.float64(43.09), np.float64(42.89), np.float64(43.84), np.float64(43.82), np.float64(41.17)],
-	[np.float64(46.76), np.float64(40.42), np.float64(41.23), np.float64(46.7), np.float64(45.67), np.float64(44.45), np.float64(37.2), np.float64(47.03), np.float64(44.57), np.float64(47.99)],
-	[np.float64(37.79), np.float64(46.42), np.float64(37.94), np.float64(43.39), np.float64(37.49), np.float64(46.18), np.float64(45.68), np.float64(42.83), np.float64(40.88), np.float64(36.83)],
-	[np.float64(44.36), np.float64(41.45), np.float64(44.66), np.float64(46.39), np.float64(47.71), np.float64(46.27), np.float64(36.14), np.float64(40.32), np.float64(44.76), np.float64(38.06)],
-] )
+prob = np.array([0.25, 0.25, 0.25, 0.25])
+b = np.array([5.3, 5.69, 5.34, 6.1, 5.86])
+E_max = np.array([45, 36.0, 28.8, 23.04, 18.43, 14.75, 11.8, 11.25, 11.25, 11.25])
+d = np.array([
+        [18.09, 19.16, 24.76, 17.93, 17.97, 18.64, 16.11, 14.44, 20.16, 12.22],
+        [49.37, 46.58, 37.95, 47.48, 31.4, 49.58, 25.17, 48.24, 30.32, 41.34],
+        [54.07, 64.98, 52.6, 58.66, 53.27, 68.95, 66.25, 50.07, 72.38, 58.16],
+        [91.5, 83.55, 75.06, 99.51, 82.01, 95.19, 76.11, 91.68, 75.34, 78.01],
+])
+eC = np.array([
+        [0.98, 1.3, 1.39, 1.58, 1.47, 1.07, 1.3, 0.98, 1.58, 1.23],
+        [1.2, 1.53, 1.63, 0.98, 1.29, 1.05, 0.99, 0.94, 0.99, 1.49],
+        [1.38, 1.21, 1.47, 1.05, 1.02, 1.6, 1.09, 1.52, 1.62, 1.53],
+        [1.56, 0.93, 1.52, 1.06, 1.2, 1.39, 1.38, 1.6, 1.62, 1.31],
+])
+eO = np.array([
+        [-0.26, -0.95, -3.14, -4.22, -2.04, -0.86, -5.37, 0.17, -5.02, -1.14],
+        [-2.18, -0.78, -1.88, -1.88, -3.86, -3.67, -0.63, -3.59, -0.53, -2.96],
+        [-0.91, -3.72, -4.83, -0.93, -4.69, -6.17, -5.62, -5.03, -2.65, 0.39],
+        [-2.93, 0.49, -4.64, -2.9, -3.44, 0.08, -6.22, -2.58, -3.62, 0.2],
+])
+pO = np.array([
+        [116.58, 117.75, 112.04, 121.7, 122.02, 124.67, 115.97, 123.51, 111.16, 111.29],
+        [112.83, 115.16, 113.29, 122.6, 118.54, 116.44, 126.42, 127.28, 111.39, 122.94],
+        [119.49, 118.97, 120.73, 118.46, 125.58, 116.52, 125.98, 116.61, 117.99, 113.42],
+        [119.45, 115.66, 117.67, 113.02, 115.07, 110.8, 112.46, 117.7, 125.37, 117.01],
+])
+pC = np.array([
+        [75.18, 69.74, 78.42, 77.13, 70.61, 69.3, 74.07, 73.55, 79.54, 75.06],
+        [69.61, 69.24, 77.06, 71.62, 79.45, 71.85, 72.17, 69.83, 75.37, 76.14],
+        [75.8, 71.79, 74.39, 70.43, 72.03, 75.06, 76.13, 78.58, 75.19, 77.47],
+        [72.23, 70.82, 78.78, 71.39, 69.54, 69.2, 71.76, 77.72, 74.53, 75.2],
+])
+sold_price = np.array([
+        [39.24, 34.54, 30.74, 34.17, 39.9, 30.61, 32.56, 31.94, 35.87, 33.5],
+        [31.11, 35.94, 37.85, 37.45, 33.95, 32.37, 33.7, 36.77, 33.13, 32.42],
+        [32.25, 32.5, 31.06, 31.91, 38.21, 37.51, 36.03, 36.58, 34.64, 32.14],
+        [35.49, 37.47, 34.52, 33.84, 30.98, 38.7, 33.05, 35.08, 30.5, 31.71],
+])
+# buy_price = np.array([
+#         [54.94, 48.36, 43.04, 47.84, 55.86, 42.85, 45.58, 44.72, 50.22, 46.9],
+#         [43.55, 50.32, 52.99, 52.43, 47.53, 45.32, 47.18, 51.48, 46.38, 45.39],
+#         [45.15, 45.5, 43.48, 44.67, 53.49, 52.51, 50.44, 51.21, 48.5, 45.0],
+#         [49.69, 52.46, 48.33, 47.38, 43.37, 54.18, 46.27, 49.11, 42.7, 44.39],
+# ])
+
+buy_price = 1.4*sold_price
