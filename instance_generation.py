@@ -1,18 +1,18 @@
 import numpy as np
 
 range_I = [2, 5, 10, 20, 50, 70, 100, 150, 200, 300, 400, 600]
-range_S = [4 for _ in range(12)]
+range_S = [2, 4, 8, 20, 80, 120, 120, 130, 130, 140, 150, 150]
 range_T = [4, 10, 20, 30, 70, 100, 100, 120, 150, 170, 170, 200]
 range_P = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6]
 
-np.random.seed(0)
 
 for instance in range(len(range_I)):
+    np.random.seed(0)
 
-# NB_I = range_I[1]
-# NB_S = range_S[1]
-# NB_T = range_T[1]
-# NB_P = range_P[1]
+    # NB_I = range_I[1]
+    # NB_S = range_S[1]
+    # NB_T = range_T[1]
+    # NB_P = range_P[1]
     NB_I = range_I[instance]
     NB_S = range_S[instance]
     NB_T = range_T[instance]
@@ -43,14 +43,14 @@ for instance in range(len(range_I)):
             E_max.append(goal)
 
     # d = np.round(10*np.random.uniform(6.74, 7.84, (NB_S, NB_T, NB_P)),2)
-    # d = np.round(10*np.random.uniform(1, 10, (NB_S, NB_T, NB_P)),2)
+    d = np.round(10*np.random.uniform(1, 10, (NB_S, NB_T, NB_P)),2)
 
-    d = np.round(10*np.array(
-        [[[np.random.uniform(1, 2.5) for j in P] for _ in T], # Poor
-        [[np.random.uniform(2.5, 5) for j in P] for _ in T], # Fair
-        [[np.random.uniform(5, 7.5)  for j in P]for _ in T], # Good
-        [[np.random.uniform(7.5, 10) for j in P] for _ in T] # Boom
-        ]),2)
+    # d = np.round(10*np.array(
+    #     [[[np.random.uniform(1, 2.5) for j in P] for _ in T], # Poor
+    #     [[np.random.uniform(2.5, 5) for j in P] for _ in T], # Fair
+    #     [[np.random.uniform(5, 7.5)  for j in P]for _ in T], # Good
+    #     [[np.random.uniform(7.5, 10) for j in P] for _ in T] # Boom
+    #     ]),2)
 
 
     prob = np.round(np.array([1 / NB_S for _ in S]), 2)

@@ -161,7 +161,7 @@ if model.status == GRB.OPTIMAL:
     # plt.title("Émission moyenne par période")
     plt.ylabel("GHG emission (tCO₂-eq)", fontsize=25)
     plt.xlabel("Periods", fontsize=25)
-    plt.xticks(x, [t+1 for t in T], fontsize = 20)
+    plt.xtaicks(x, [t+1 for t in T], fontsize = 20)
     plt.yticks(fontsize = 20)
     plt.grid(True)
     plt.legend()

@@ -2,11 +2,11 @@ import numpy as np
 import random
 import time
 from gurobipy import Model, GRB, quicksum
-from Instances.instance_6 import * # ASSUMPTION: This file contains P, and product-indexed data
+from matplotlib import pyplot as plt
+from Instances.instance_10 import * # ASSUMPTION: This file contains P, and product-indexed data
 
-ITER_MAX = 100
-K_MAX = 4
-V, u = 200, 70
+ITER_MAX = 500
+K_MAX = 3
 
 def generate_greedy_initial_solution(data):
     """Generates an initial investment plan based on total aggregate demand across all products."""
@@ -140,10 +140,11 @@ def update_q_table(q_table, state, action, reward, next_state, alpha, gamma):
 
 # --- 3. MAIN Q-LEARNING VNS PROCEDURE ---
 
-def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.9, epsilon=0.9):
+def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.95, epsilon=0.9):
     """Performs a VNS search guided by a Q-Learning agent."""
     print("--- Starting Q-Learning VNS for Multi-Product Problem ---")
     start_vns_time = time.time()
+    
 
     # --- Q-Learning Setup ---
     states = [0, 1]  # 0: Improvement, 1: Stagnation
@@ -154,6 +155,7 @@ def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.9, epsilon=0.9):
     sub_model, capacity_constrs = create_subproblem_model(data)
     Y_best = generate_greedy_initial_solution(data)
     cost_best = evaluate_solution(Y_best, sub_model, capacity_constrs, data)
+    hist = [cost_best]
     print(f"Initial Solution Cost: {cost_best:.2f}\n")
 
     current_state = 0 # Start in the "Improvement" state
@@ -167,14 +169,16 @@ def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.9, epsilon=0.9):
 
         # 3. Determine the reward and the next state
         if cost_shaken < cost_best:
-            reward = 10.0
+            reward = cost_best - cost_shaken
             next_state = 0 # "Improvement" state
             Y_best, cost_best = Y_shaken, cost_shaken # Update the best solution
             # if (i + 1) % 10 == 0 or i==0:
             print(f"Iter {i+1}: New best found (k={action_k}) -> Cost: {cost_best:.2f}")
         else:
-            reward = -1.0
-            next_state = 1 # "Stagnation" state
+            reward = -5.0
+            next_state = 1 # "Stagnation" 
+        
+        hist.append(cost_best)
 
         # 4. Update the Q-table with the experience
         update_q_table(q_table, current_state, action_k, reward, next_state, alpha, gamma)
@@ -183,6 +187,7 @@ def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.9, epsilon=0.9):
         current_state = next_state
 
     end_vns_time = time.time()
+    time.sleep(0.0)
     print(f"\n--- Q-VNS Finished in {end_vns_time - start_vns_time:.2f} seconds ---")
 
     # print("\nLearned Q-Table:")
@@ -192,7 +197,7 @@ def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.9, epsilon=0.9):
         # for a in actions:
         #     print(f"    Action k={a}: Q-value = {q_table[s][a]:.3f}")
 
-    return Y_best, cost_best
+    return Y_best, cost_best, hist
 
 
 # --- 4. EXECUTION BLOCK ---
@@ -205,8 +210,15 @@ if __name__ == "__main__":
         'b': b, 'd': d, 'V': V, 'u': u, 'prob': prob, 'pO': pO, 'pC': pC,
         'buy_price': buy_price, 'sold_price': sold_price, 'eO': eO, 'eC': eC, 'E_max': E_max
     }
+    
 
-    Y_opt, cost_opt = Q_VNS(max_iterations=ITER_MAX, data=problem_data)
+    Y_opt, cost_opt, hist = Q_VNS(max_iterations=ITER_MAX, data=problem_data)
+    
+    with open(f"Computational_analysis/collection_ql.txt", "a") as file:
+        file.write(f"{np.round(cost_opt,2)} \t {np.round(time.process_time()-start_time,2)}\n")
+        
+    plt.plot(hist)
+    plt.show()
 
     # print("\n=====================================")
     # print("           Final Results")

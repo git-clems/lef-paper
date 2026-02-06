@@ -21,7 +21,7 @@ from gurobipy import Model, GRB, quicksum
 import gymnasium as gym
 from gymnasium import spaces
 
-from Instances.instance_6 import *
+from Instances.instance_5 import *
 
 # -----------------------------
 # Fixed first-stage costs

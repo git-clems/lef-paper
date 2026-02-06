@@ -2,12 +2,13 @@ import numpy as np
 import random
 import time
 from gurobipy import Model, GRB, quicksum
-from Instances.instance_6 import *
+from Instances.instance_10 import *
+import matplotlib.pyplot as plt
 
 # -----------------------------
 # SA parameters
 # -----------------------------
-MAX_ITER = 100          # total SA iterations
+MAX_ITER = 300          # total SA iterations
 T0 = 1000.0              # initial temperature
 ALPHA = 0.995            # cooling rate (T <- ALPHA*T)
 MIN_T = 1e-6             # stop if temperature goes below this
@@ -17,8 +18,8 @@ SEED = 0
 # -----------------------------
 # Fixed costs (same as your code)
 # -----------------------------
-V = 200
-u = 70
+# V = 200
+# u = 70
 
 problem_data = {
     'T': T, 'I': I, 'S': S, 'P': P,
@@ -194,6 +195,7 @@ def SA(max_iter, T0, alpha, min_T, data):
 
     Y_best = Y_curr.copy()
     cost_best = cost_curr
+    hist =[cost_best]
 
     Ttemp = T0
 
@@ -218,18 +220,20 @@ def SA(max_iter, T0, alpha, min_T, data):
         if accept:
             Y_curr = Y_new
             cost_curr = cost_new
+            
 
             if cost_curr < cost_best:
                 Y_best = Y_curr.copy()
                 cost_best = cost_curr
                 print(f"Iter {it}: New best -> {cost_best:.2f} | T={Ttemp:.4f}")
 
+        hist.append(cost_best)
         # cool down
         Ttemp *= alpha
 
     end_time = time.time()
     print(f"--- SA Finished in {end_time - start_time:.2f} seconds ---")
-    return Y_best, cost_best
+    return Y_best, cost_best, hist
 
 # -----------------------------
 # 5) Execute
@@ -237,7 +241,7 @@ def SA(max_iter, T0, alpha, min_T, data):
 if __name__ == "__main__":
     start_cpu = time.process_time()
 
-    Y_opt, cost_opt = SA(
+    Y_opt, cost_opt, hist = SA(
         max_iter=MAX_ITER,
         T0=T0,
         alpha=ALPHA,
@@ -245,15 +249,18 @@ if __name__ == "__main__":
         data=problem_data
     )
 
-    print("\n=====================================")
-    print("           Final Results")
-    print("=====================================")
-    print("\nBest Investment Plan (Y):")
-    print(Y_opt)
+    # print("\n=====================================")
+    # print("           Final Results")
+    # print("=====================================")
+    # print("\nBest Investment Plan (Y):")
+    # print(Y_opt)
 
-    # with open("Performance/Note/collection.txt", "a") as file:
-    #     file.write(f"{np.round(cost_opt, 2)}\t{np.round(time.process_time() - start_cpu, 2)}\n")
-
-    print(f"Total process time : {np.round(time.process_time() - start_cpu, 2)} second")
-    print(f"\nBest Cost Found: {cost_opt:.2f}")
-    print("=====================================")
+    # print(f"Total process time : {np.round(time.process_time() - start_cpu, 2)} second")
+    # print(f"\nBest Cost Found: {cost_opt:.2f}")
+    # print("=====================================")
+    
+    with open("Computational_analysis/collection_SA.txt", "a") as file:
+        file.write(f"{np.round(cost_opt, 2)}\t{np.round(time.process_time() - start_cpu, 2)}\n")
+        
+    plt.plot(hist)
+    plt.show()

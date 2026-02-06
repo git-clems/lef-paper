@@ -4,7 +4,7 @@ import time
 from gurobipy import Model, GRB, quicksum
 import gymnasium as gym
 from gymnasium import spaces
-from Instances.instance_6 import *
+from Instances.instance_10 import *
 
 # V, u = 200, 70
 _values = []
@@ -331,6 +331,7 @@ def run_policy(env, Q, verbose=True):
             print(f"Step {env.steps}: improved with k={info['k']} -> best_cost={info['cost_best']:.2f}")
 
         best_cost = info["cost_best"]
+        _values.append(env.cost_best)
 
         if terminated or truncated:
             break
@@ -338,16 +339,16 @@ def run_policy(env, Q, verbose=True):
     return env.Y_best, env.cost_best
 
 if __name__ == "__main__":
-    MAX_ITER = 100
-    K_MAX = 4
+    MAX_ITER = 15
+    K_MAX = 3
 
     # Create Gym environment
     env = QLVNSEnv(
         data=problem_data,
         K_MAX=K_MAX,
         max_steps=MAX_ITER,
-        reward_success=10.0,
-        reward_fail=-0.2,
+        reward_success=1.0,
+        reward_fail=-1.5,
         reward_scale_by_improvement=True,   # optional
         use_current_solution=True,          # recommended: better exploration
         seed=0
@@ -358,9 +359,9 @@ if __name__ == "__main__":
     # Train Q-learning
     Q = train_q_learning(
         env,
-        episodes=1,
+        episodes=20,
         alpha=0.2,
-        gamma=0.9,
+        gamma=0.1,
         epsilon_start=0.8,
         epsilon_end=0.05,
         epsilon_decay=0.93,
@@ -376,7 +377,7 @@ if __name__ == "__main__":
     print(f"CPU time for Q-learning training: {cpu_end - cpu_start:.2f} seconds")
 
     print("\n=====================================")
-    print("           QL-VNS Final Results")
+    print("           GYM-VNS Final Results")
     print("=====================================")
     print("Best Investment Plan (Y):")
     # print(Y_best)

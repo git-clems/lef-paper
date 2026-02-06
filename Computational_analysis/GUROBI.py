@@ -1,5 +1,5 @@
 from gurobipy import Model, GRB, quicksum
-from Instances.instance_6 import *
+from Instances.instance_8 import *
 import time
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -8,7 +8,7 @@ from matplotlib.ticker import MaxNLocator  # Pour forcer les ticks entiers
 start_time = time.process_time()
 
 model = Model("CapAndTrade_TwoStage")
-model.setParam('OutputFlag',0)
+# model.setParam('OutputFlag',0)
 # NB_P = 1
 # P = range(NB_P)
 
@@ -59,24 +59,61 @@ Y_val = np.array([[Y[t, i].X for i in I] for t in T])
 
 
 if model.status == GRB.OPTIMAL:
-    print(f"({NB_I}, {NB_S}, {NB_T}, {NB_P})")
-    print(f"Z = {np.round(model.ObjVal,2)}")
-    end_time = time.process_time()
-    print(f"************* Process time ; {np.round(end_time-start_time,2)} *************")
-    print(Y_val)
+    # print(f"({NB_I}, {NB_S}, {NB_T}, {NB_P})")
+    # print(f"Z = {np.round(model.ObjVal,2)}")
+    # end_time = time.process_time()
+    # print(f"************* Process time ; {np.round(end_time-start_time,2)} *************")
+    # print(Y_val)
     
     install = sum(V * b[i] * Y_val[t, i] for t in T for i in I)
     maintain = sum(u * b[i] * Y_val[tp, i] for i in I for t in T for tp in range(t + 1))
     operation = sum(prob[s] * (pO[s, t, j] * XO_val[s, t, j] + pC[s, t, j] * XC_val[s, t, j]) for t in T for s in S for j in P)
     carbon_trading = sum(prob[s] * (buy_price[s, t] * Buy_val[s, t] - sold_price[s, t] * Sold_val[s, t]) for t in T for s in S)
     
-    print(f'Installation cost   : {np.round(install,2)}')
-    print(f'Maintenance cost    : {np.round(maintain,2)}')
-    print(f'Production cost     : {np.round(operation,2)}')
-    print(f'carbon trading cost : {np.round(carbon_trading,2)}')
+    # print(f'Installation cost   : {np.round(install,2)}')
+    # print(f'Maintenance cost    : {np.round(maintain,2)}')
+    # print(f'Production cost     : {np.round(operation,2)}')
+    # print(f'carbon trading cost : {np.round(carbon_trading,2)}')
 
-    with open(f"Computational_analysis/collection.txt", "a") as file:
-        file.write(f"{np.round(end_time-start_time,2)}\t")
+    with open(f"Computational_analysis/collection_gurobi.txt", "a") as file:
+        file.write(f"{np.round(time.process_time()-start_time,2)}\t")
+
+    # index_periods = np.arange(len(T))
+    # Scenario = ["POOR", "FAIRE", "GOOD", "BOOM"]
+    # colors = ["red", "orange", "yellowgreen", "green"]
+
+    # plt.figure(figsize=(10, 6))
+
+    # for s_idx in S:
+    #     x_offset = index_periods + (s_idx - (len(S)-1)/2) * 0.2  # centered offsets
+
+    #     # 1D heights: total LEF production per period (sum over products)
+    #     XO_period = np.array(
+    #         [sum(XO_val[s_idx, t, j] for j in P) for t in T],
+    #         dtype=float
+    #     )
+
+    #     total_lef = XO_period.sum()
+
+    #     plt.bar(
+    #         x_offset,
+    #         XO_period,
+    #         width=0.2,
+    #         label=f"{Scenario[s_idx]} : {total_lef:.2f} ton LEF-based tea",
+    #         color=colors[s_idx]
+    #     )
+
+    # for i in range(1, len(T)):
+    #     plt.axvline(x=i - 0.5, color="black", linestyle="--", linewidth=0.5)
+
+    # plt.xlabel("Periods", fontsize=25)
+    # plt.ylabel("LEF based tea production (ton)", fontsize=25)
+    # plt.xticks(index_periods, [t + 1 for t in T], fontsize=20)
+    # plt.yticks(fontsize=25)
+    # plt.legend(title="Scenario", fontsize=12)
+    # plt.tight_layout()
+    # plt.show()
+
 
 elif model.status == GRB.INFEASIBLE:
     print("Model is infeasible.")

@@ -2,30 +2,16 @@ import numpy as np
 import random
 import time
 from gurobipy import Model, GRB, quicksum
-from Instances.instance_6 import *
+from Instances.instance_11 import *
 import matplotlib.pyplot as plt
 start_time = time.process_time()
 
 # --- 1. Bundle Data for Cleanliness and Portability ---
 # Added P and NB_P for products
 
-MAX_ITER = 100
-K_MAX = 4
+MAX_ITER = 70
+K_MAX = 3
 
-# NB_P = 1
-# P = range(NB_P)
-
-# V = 200
-# u = 70
-
-# pO = pO.reshape(NB_S,NB_T,NB_P)
-# pC = pC.reshape(NB_S,NB_T,NB_P)
-# eO = eO.reshape(NB_S,NB_T,NB_P)
-# eC = eC.reshape(NB_S,NB_T,NB_P)
-# d = d.reshape(NB_S,NB_T,NB_P)
-
-
-_iteration = []
 _values = []
     
 problem_data = {
@@ -122,6 +108,8 @@ def create_subproblem_model(data):
     """Creates the Gurobi subproblem model structure for multiple products."""
     sub_model = Model("SecondStageSubproblem_MultiProduct")
     sub_model.setParam('OutputFlag', 0)
+    sub_model.setParam("Method", 1)  # dual simplex good for repeated RHS updates
+
     S, T, P, prob, pO, pC, buy_price, sold_price, d, eO, eC, E_max = (
         data['S'], data['T'], data['P'], data['prob'], data['pO'], data['pC'], 
         data['buy_price'], data['sold_price'], data['d'], data['eO'], data['eC'], data['E_max']
@@ -214,16 +202,17 @@ def VNS(k_max, max_iterations, data):
 if __name__ == "__main__":
     Y_opt, cost_opt = VNS(k_max=K_MAX, max_iterations=MAX_ITER, data=problem_data)
 
-    print("\n=====================================")
-    print("           Final Results")
-    print("=====================================")
-    print("\nOptimal Investment Plan (Y):")
-    print(Y_opt)
-    # with open(f'Performance/Note/collection.txt',"a") as file:
-    #     file.write(f"{np.round(cost_opt,2)} \t {np.round(time.process_time()-start_time,2)}\n")
-    print(f"Total process time : {np.round(time.process_time() -start_time,2)} second")
-    print(f"\nOptimal Cost Found: {cost_opt:.2f}")
-    print("=====================================")
+    # print("\n=====================================")
+    # print("           Final Results")
+    # print("=====================================")
+    # print("\nOptimal Investment Plan (Y):")
+    # # print(Y_opt)
+    # print(f"Total process time : {np.round(time.process_time() -start_time,2)} second")
+    # print(f"\nOptimal Cost Found: {cost_opt:.2f}")
+    # print("=====================================")
+    
+    with open(f"Computational_analysis/collection_vns.txt", "a") as file:
+        file.write(f"{np.round(cost_opt,2)} \t {np.round(time.process_time()-start_time,2)}\n")
     
     plt.plot(_values)
-    plt.show()
+    # plt.show()
