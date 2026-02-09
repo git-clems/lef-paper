@@ -2,13 +2,13 @@ import numpy as np
 import random
 import time
 from gurobipy import Model, GRB, quicksum
-from Instances.instance_10 import *
+from Instances.instance_12 import *
 import matplotlib.pyplot as plt
 
 # -----------------------------
 # SA parameters
 # -----------------------------
-MAX_ITER = 300          # total SA iterations
+MAX_ITER = 500          # total SA iterations
 T0 = 1000.0              # initial temperature
 ALPHA = 0.995            # cooling rate (T <- ALPHA*T)
 MIN_T = 1e-6             # stop if temperature goes below this
@@ -130,7 +130,11 @@ def neighbor_move(Y_current, data):
 def create_subproblem_model(data):
     sub_model = Model("SecondStageSubproblem_MultiProduct")
     sub_model.setParam('OutputFlag', 0)
-    sub_model.setParam("Method", -1)
+    sub_model.setParam("Method", 1)
+    
+    # Keep the edited block exactly:
+    sub_model.setParam("Presolve", 0)  # sometimes helps repeated RHS updates
+    sub_model.setParam("Crossover", 0) # if using simplex
 
     S, T, P, prob, pO, pC, buy_price, sold_price, d, eO, eC, E_max = (
         data['S'], data['T'], data['P'], data['prob'], data['pO'], data['pC'],
@@ -263,4 +267,4 @@ if __name__ == "__main__":
         file.write(f"{np.round(cost_opt, 2)}\t{np.round(time.process_time() - start_cpu, 2)}\n")
         
     plt.plot(hist)
-    plt.show()
+    # plt.show()

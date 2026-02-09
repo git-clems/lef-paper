@@ -2,7 +2,7 @@ import numpy as np
 import random
 import time
 from gurobipy import Model, GRB, quicksum
-from Instances.instance_11 import *
+from Instances.instance_12 import *
 import matplotlib.pyplot as plt
 start_time = time.process_time()
 
@@ -109,6 +109,8 @@ def create_subproblem_model(data):
     sub_model = Model("SecondStageSubproblem_MultiProduct")
     sub_model.setParam('OutputFlag', 0)
     sub_model.setParam("Method", 1)  # dual simplex good for repeated RHS updates
+    sub_model.setParam("Presolve", 0)  # sometimes helps repeated RHS updates
+    sub_model.setParam("Crossover", 0) # if using simplex
 
     S, T, P, prob, pO, pC, buy_price, sold_price, d, eO, eC, E_max = (
         data['S'], data['T'], data['P'], data['prob'], data['pO'], data['pC'], 

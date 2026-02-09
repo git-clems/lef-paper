@@ -365,7 +365,7 @@ def QL_VNS(
 # 6) RUN
 # ============================================================
 if __name__ == "__main__":
-    from Instances.instance_10 import *  # noqa: F401,F403
+    from Instances.instance_7 import *  # noqa: F401,F403
     
     start_time = time.process_time()
 

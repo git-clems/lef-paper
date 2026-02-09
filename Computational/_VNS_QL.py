@@ -1,5 +1,5 @@
 import numpy as np
-from Instances.instance_10 import *
+from Instances.instance_7 import *
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -9,8 +9,8 @@ import random
 start_time = time.process_time()
 
 
-MAX_NEIGHBORHOOD = 4
-MAX_ITER = 150
+MAX_NEIGHBORHOOD = 2
+MAX_ITER = 800
 
 problem_data = {
     'T': T, 'I': I, 'S': S, 'P': P, 'NB_I': NB_I, 'NB_T': NB_T, 'NB_P': NB_P, 'NB_S': NB_S, 'b': b, 'd': d, 
