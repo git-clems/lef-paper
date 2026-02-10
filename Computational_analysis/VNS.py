@@ -11,8 +11,6 @@ start_time = time.process_time()
 
 MAX_ITER = 70
 K_MAX = 3
-
-_values = []
     
 problem_data = {
     'T': T, 'I': I, 'S': S, 'P': P,
@@ -171,6 +169,7 @@ def VNS(k_max, max_iterations, data):
     """Performs a Reduced VNS search."""
     print("--- Starting Reduced VNS for Multi-Product Problem ---")
     start_vns_time = time.time()
+    start = time.process_time()
     
     sub_model, capacity_constrs = create_subproblem_model(data)
     
@@ -179,7 +178,10 @@ def VNS(k_max, max_iterations, data):
     Y_best = generate_greedy_initial_solution(data)
     cost_best = evaluate_solution(Y_best, sub_model, capacity_constrs, data)
     print(f"Initial Solution Cost: {cost_best:.2f}\n")
-
+    
+    hist = [cost_best]
+    time_hist = [0]
+    
     iter_count = 0
     while iter_count < max_iterations:
         k = 1
@@ -191,18 +193,21 @@ def VNS(k_max, max_iterations, data):
                 cost_best = cost_shaken
                 print(f"Iter {iter_count}: New best found (from k={k}) -> Cost: {cost_best:.2f}")
                 k = 1
+                
+                hist.append(cost_best)
+                time_hist.append(time.process_time() - start)
             else:
                 k += 1
-            _values.append(cost_best)
+            
         iter_count += 1
     
     end_vns_time = time.time()
     print(f"\n--- VNS Finished in {end_vns_time - start_vns_time:.2f} seconds ---")
-    return Y_best, cost_best
+    return Y_best, cost_best, hist, time_hist
 
 # --- 6. Execute the Algorithm ---
 if __name__ == "__main__":
-    Y_opt, cost_opt = VNS(k_max=K_MAX, max_iterations=MAX_ITER, data=problem_data)
+    Y_opt, cost_opt, hist, time_hist  = VNS(k_max=K_MAX, max_iterations=MAX_ITER, data=problem_data)
 
     # print("\n=====================================")
     # print("           Final Results")
@@ -216,5 +221,9 @@ if __name__ == "__main__":
     with open(f"Computational_analysis/collection_vns.txt", "a") as file:
         file.write(f"{np.round(cost_opt,2)} \t {np.round(time.process_time()-start_time,2)}\n")
     
-    plt.plot(_values)
+    
+    # with open("Computational_analysis/iteration.py", "a") as interation:
+    #     interation.write(f'hist_vns, time_vns = {hist}, {time_hist}\n')
+    
+    plt.plot(hist)
     # plt.show()

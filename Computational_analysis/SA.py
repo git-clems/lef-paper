@@ -2,13 +2,13 @@ import numpy as np
 import random
 import time
 from gurobipy import Model, GRB, quicksum
-from Instances.instance_12 import *
+from Instances.instance_8 import *
 import matplotlib.pyplot as plt
 
 # -----------------------------
 # SA parameters
 # -----------------------------
-MAX_ITER = 500          # total SA iterations
+MAX_ITER = 600          # total SA iterations
 T0 = 1000.0              # initial temperature
 ALPHA = 0.995            # cooling rate (T <- ALPHA*T)
 MIN_T = 1e-6             # stop if temperature goes below this
@@ -190,6 +190,9 @@ def evaluate_solution(Y, sub_model, capacity_constrs, data):
 def SA(max_iter, T0, alpha, min_T, data):
     print("--- Starting Simulated Annealing (SA) ---")
     start_time = time.time()
+    start = time.process_time()
+    
+    
 
     sub_model, capacity_constrs = create_subproblem_model(data)
 
@@ -200,6 +203,8 @@ def SA(max_iter, T0, alpha, min_T, data):
     Y_best = Y_curr.copy()
     cost_best = cost_curr
     hist =[cost_best]
+    time_hist = [0]
+    
 
     Ttemp = T0
 
@@ -231,13 +236,15 @@ def SA(max_iter, T0, alpha, min_T, data):
                 cost_best = cost_curr
                 print(f"Iter {it}: New best -> {cost_best:.2f} | T={Ttemp:.4f}")
 
-        hist.append(cost_best)
+                hist.append(cost_best)
+                time_hist.append(time.process_time() - start)
+        
         # cool down
         Ttemp *= alpha
 
     end_time = time.time()
     print(f"--- SA Finished in {end_time - start_time:.2f} seconds ---")
-    return Y_best, cost_best, hist
+    return Y_best, cost_best, hist, time_hist
 
 # -----------------------------
 # 5) Execute
@@ -245,7 +252,7 @@ def SA(max_iter, T0, alpha, min_T, data):
 if __name__ == "__main__":
     start_cpu = time.process_time()
 
-    Y_opt, cost_opt, hist = SA(
+    Y_opt, cost_opt, hist, time_hist = SA(
         max_iter=MAX_ITER,
         T0=T0,
         alpha=ALPHA,
@@ -263,8 +270,10 @@ if __name__ == "__main__":
     # print(f"\nBest Cost Found: {cost_opt:.2f}")
     # print("=====================================")
     
-    with open("Computational_analysis/collection_SA.txt", "a") as file:
-        file.write(f"{np.round(cost_opt, 2)}\t{np.round(time.process_time() - start_cpu, 2)}\n")
-        
-    plt.plot(hist)
+    # with open("Computational_analysis/collection_SA.txt", "a") as file:
+    #     file.write(f"{np.round(cost_opt, 2)}\t{np.round(time.process_time() - start_cpu, 2)}\n")
+    
+    with open("Computational_analysis/iteration.py", "a") as interation:
+        interation.write(f'hist_sa, time_sa = {hist}, {time_hist}\n')
+    # plt.plot(hist)
     # plt.show()
