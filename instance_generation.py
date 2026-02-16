@@ -9,10 +9,6 @@ range_P = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6]
 for instance in range(len(range_I)):
     np.random.seed(0)
 
-    # NB_I = range_I[1]
-    # NB_S = range_S[1]
-    # NB_T = range_T[1]
-    # NB_P = range_P[1]
     NB_I = range_I[instance]
     NB_S = range_S[instance]
     NB_T = range_T[instance]

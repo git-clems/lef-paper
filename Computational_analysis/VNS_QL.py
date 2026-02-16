@@ -5,57 +5,53 @@ from gurobipy import Model, GRB, quicksum
 from matplotlib import pyplot as plt
 from Instances.instance_8 import *  # assumes P and product-indexed data exist
 
-ITER_MAX = 600
+ITER_MAX = 800
 K_MAX = 3
 
 # --------------------------
 # 1) Greedy initial solution
 # --------------------------
 def generate_greedy_initial_solution(data):
-    """Generates an initial investment plan based on total aggregate demand across all products."""
+    """Initial investment plan based on expected total demand across all products."""
     T, I, P, S, b, d, V, u, NB_T, NB_I = (
         data['T'], data['I'], data['P'], data['S'], data['b'], data['d'],
         data['V'], data['u'], data['NB_T'], data['NB_I']
     )
 
-    # Ensure we have a stable order for periods (works for {0..} or {1..})
-    T_list = list(T)
-    T_list.sort()
+    # Use an ordered list for robust indexing
+    T_list = sorted(list(T))
+    tpos = {t: idx for idx, t in enumerate(T_list)}
 
     Y_initial = np.zeros((NB_T, NB_I), dtype=int)
     sites_used = [False] * NB_I
 
+    # Expected total demand per period (sum over products, average over scenarios)
     avg_total_demand = {
         t: float(np.sum([np.mean([d[s, t, p] for s in S]) for p in P]))
         for t in T_list
     }
 
     for t in T_list:
-        # cumulative capacity up to t (using positions, not range(t+1))
-        tpos = T_list.index(t)
-        cumulative_capacity = sum(
-            b[i] * Y_initial[tp, i]
-            for tp in range(tpos + 1)
-            for i in I
-        )
+        idx = tpos[t]
+        cumulative_capacity = sum(b[i] * Y_initial[tp, i] for tp in range(idx + 1) for i in I)
 
         while cumulative_capacity < avg_total_demand[t]:
-            best_site_to_build, max_ratio = -1, -1.0
+            best_site_to_build, best_ratio = -1, -1.0
+
             for i in I:
                 if not sites_used[i]:
-                    # maintenance from installation period to end (position-based)
-                    remaining_periods = NB_T - tpos
+                    remaining_periods = NB_T - idx  # maintenance from install period to end
                     total_first_stage_cost = (V * b[i]) + (remaining_periods * u * b[i])
+
                     if total_first_stage_cost > 0:
                         ratio = b[i] / total_first_stage_cost
-                        if ratio > max_ratio:
-                            max_ratio = ratio
+                        if ratio > best_ratio:
+                            best_ratio = ratio
                             best_site_to_build = i
 
             if best_site_to_build != -1:
                 i = best_site_to_build
-                # install at the row index corresponding to this period position
-                Y_initial[tpos, i] = 1
+                Y_initial[idx, i] = 1
                 sites_used[i] = True
                 cumulative_capacity += b[i]
             else:
@@ -224,6 +220,8 @@ def choose_action(state, q_table, actions, epsilon):
     best_actions = [a for a, q in q_values.items() if q == max_q]
     return random.choice(best_actions)
 
+
+
 def update_q_table(q_table, state, action, reward, next_state, alpha, gamma):
     max_next_q = max(q_table[next_state].values())
     learned_value = reward + gamma * max_next_q
@@ -248,6 +246,9 @@ def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.95, epsilon=0.9)
     # VNS initialization
     sub_model, capacity_constrs = create_subproblem_model(data)
     Y_best = generate_greedy_initial_solution(data)
+    # Y_best = np.zeros((NB_T,NB_I))
+    # Y_best = np.zeros((NB_T, NB_I))
+
     cost_best = evaluate_solution(Y_best, sub_model, capacity_constrs, data)
 
     hist = [cost_best]
@@ -255,7 +256,10 @@ def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.95, epsilon=0.9)
     print(f"Initial Solution Cost: {cost_best:.2f}\n")
 
     current_state = 0
+    i = 0
+    # while time.process_time() - start < run_time:
     for i in range(max_iterations):
+        i += 1
         # Choose action
         action_k = choose_action(current_state, q_table, actions, epsilon)
 
@@ -264,17 +268,20 @@ def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.95, epsilon=0.9)
         cost_shaken = evaluate_solution(Y_shaken, sub_model, capacity_constrs, data)
 
         # Reward + next state
+        delta = cost_best - cost_shaken
+        reward = delta/(max(cost_best, 1))
         if cost_shaken < cost_best:
-            reward = cost_best - cost_shaken
+            # reward = cost_best - cost_shaken
+            # reward = delta/(max(cost_best, 1))
             next_state = 0
             Y_best, cost_best = Y_shaken, cost_shaken
             print(f"Iter {i+1}: New best found (k={action_k}) -> Cost: {cost_best:.2f}")
-            
-            hist.append(cost_best)
-            time_hist.append(time.process_time() - start)
         else:
-            reward = -5.0
+            # reward = -5.0
+            # reward = 0.2*delta/(max(cost_best, 1))
             next_state = 1
+        hist.append(cost_best)
+        time_hist.append(time.process_time() - start)
 
 
         # Update Q-table
@@ -305,12 +312,13 @@ if __name__ == "__main__":
 
     Y_opt, cost_opt, hist, time_hist, q_table = Q_VNS(max_iterations=ITER_MAX, data=problem_data)
 
-    # with open("Computational_analysis/collection_ql.txt", "a") as file:
-    #     file.write(f"{np.round(cost_opt, 2)}\t{np.round(time.process_time() - start_time, 2)}\n")
+    with open("Computational_analysis/collection_ql.txt", "a") as file:
+        file.write(f"{np.round(cost_opt, 2)}\t{np.round(time.process_time() - start_time, 2)}\n")
     
     
     with open("Computational_analysis/iteration.py", "a") as interation:
-        interation.write(f'hist_ql, time_ql = {hist}, {time_hist}\n')
+        # interation.write(f'hist_ql, time_ql = {hist}, {time_hist}\n')
+        interation.write(f'hist_regular, time_ql = {hist}, {time_hist}\n')
 
     plt.plot(hist)
     # plt.show()

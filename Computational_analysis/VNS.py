@@ -2,7 +2,7 @@ import numpy as np
 import random
 import time
 from gurobipy import Model, GRB, quicksum
-from Instances.instance_12 import *
+from Instances.instance_9 import *
 import matplotlib.pyplot as plt
 start_time = time.process_time()
 
@@ -11,7 +11,8 @@ start_time = time.process_time()
 
 MAX_ITER = 70
 K_MAX = 3
-    
+run_time = 600
+   
 problem_data = {
     'T': T, 'I': I, 'S': S, 'P': P,
     'NB_T': NB_T, 'NB_I': NB_I, 'NB_S': NB_S, 'NB_P': NB_P,
@@ -175,7 +176,8 @@ def VNS(k_max, max_iterations, data):
     
 
     print("Generating initial solution...")
-    Y_best = generate_greedy_initial_solution(data)
+    # Y_best = generate_greedy_initial_solution(data)
+    Y_best = np.zeros((NB_T, NB_I))
     cost_best = evaluate_solution(Y_best, sub_model, capacity_constrs, data)
     print(f"Initial Solution Cost: {cost_best:.2f}\n")
     
@@ -183,7 +185,9 @@ def VNS(k_max, max_iterations, data):
     time_hist = [0]
     
     iter_count = 0
-    while iter_count < max_iterations:
+    while time.process_time() - start < run_time:
+        iter_count += 1
+    # while iter_count < max_iterations or time.process_time() - start < run_time:
         k = 1
         while k <= k_max:
             Y_shaken = shake(Y_best, k, data)
@@ -222,8 +226,8 @@ if __name__ == "__main__":
         file.write(f"{np.round(cost_opt,2)} \t {np.round(time.process_time()-start_time,2)}\n")
     
     
-    # with open("Computational_analysis/iteration.py", "a") as interation:
-    #     interation.write(f'hist_vns, time_vns = {hist}, {time_hist}\n')
+    with open("Computational_analysis/iteration.py", "a") as interation:
+        interation.write(f'hist_vns, time_vns = {hist}, {time_hist}\n')
     
     plt.plot(hist)
     # plt.show()

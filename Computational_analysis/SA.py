@@ -2,7 +2,7 @@ import numpy as np
 import random
 import time
 from gurobipy import Model, GRB, quicksum
-from Instances.instance_8 import *
+from Instances.instance_9 import *
 import matplotlib.pyplot as plt
 
 # -----------------------------
@@ -13,6 +13,7 @@ T0 = 1000.0              # initial temperature
 ALPHA = 0.995            # cooling rate (T <- ALPHA*T)
 MIN_T = 1e-6             # stop if temperature goes below this
 SEED = 0
+run_time = 600
 
 
 # -----------------------------
@@ -197,7 +198,8 @@ def SA(max_iter, T0, alpha, min_T, data):
     sub_model, capacity_constrs = create_subproblem_model(data)
 
     # Initial solution
-    Y_curr = generate_greedy_initial_solution(data)
+    # Y_curr = generate_greedy_initial_solution(data)
+    Y_curr = np.zeros((NB_T,NB_I))
     cost_curr = evaluate_solution(Y_curr, sub_model, capacity_constrs, data)
 
     Y_best = Y_curr.copy()
@@ -207,9 +209,13 @@ def SA(max_iter, T0, alpha, min_T, data):
     
 
     Ttemp = T0
+    
+    it = 0
 
     print(f"Initial cost: {cost_curr:.2f}")
-    for it in range(max_iter):
+    while time.process_time() - start < run_time:
+        it += 1
+    # for it in range(max_iter):
         if Ttemp < min_T:
             break
 
@@ -270,8 +276,8 @@ if __name__ == "__main__":
     # print(f"\nBest Cost Found: {cost_opt:.2f}")
     # print("=====================================")
     
-    # with open("Computational_analysis/collection_SA.txt", "a") as file:
-    #     file.write(f"{np.round(cost_opt, 2)}\t{np.round(time.process_time() - start_cpu, 2)}\n")
+    with open("Computational_analysis/collection_SA.txt", "a") as file:
+        file.write(f"{np.round(cost_opt, 2)}\t{np.round(time.process_time() - start_cpu, 2)}\n")
     
     with open("Computational_analysis/iteration.py", "a") as interation:
         interation.write(f'hist_sa, time_sa = {hist}, {time_hist}\n')

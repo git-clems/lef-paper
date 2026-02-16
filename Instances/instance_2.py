@@ -12,7 +12,7 @@ V = 262.7
 u = 26.27
 
 prob = np.array ( [np.float64(0.25), np.float64(0.25), np.float64(0.25), np.float64(0.25)] )
-b = np.array ( [np.float64(3.1), np.float64(3.43), np.float64(3.21), np.float64(3.09), np.float64(2.85)] )
+b = np.array ( [np.float64(3.1), np.float64(3.43), np.float64(3.21), np.float64(2.85), np.float64(3.09)] )
 E_max = np.array ( [45.0, np.float64(36.0), np.float64(28.8), np.float64(23.04), np.float64(18.43), np.float64(14.75), np.float64(11.8), 11.25, 11.25, 11.25] )
 d = np.array ( [
 	[[49.38], [90.26], [96.73], [44.51], [81.26], [57.6], [61.12], [93.3], [16.39], [17.84]],

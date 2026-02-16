@@ -1,5 +1,5 @@
 from gurobipy import Model, GRB, quicksum
-from Instances.instance_8 import *
+from Instances.instance_2 import *
 import time
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -78,41 +78,41 @@ if model.status == GRB.OPTIMAL:
     with open(f"Computational_analysis/collection_gurobi.txt", "a") as file:
         file.write(f"{np.round(time.process_time()-start_time,2)}\t")
 
-    # index_periods = np.arange(len(T))
-    # Scenario = ["POOR", "FAIRE", "GOOD", "BOOM"]
-    # colors = ["red", "orange", "yellowgreen", "green"]
+    index_periods = np.arange(len(T))
+    Scenario = ["POOR", "FAIRE", "GOOD", "BOOM"]
+    colors = ["red", "orange", "yellowgreen", "green"]
 
-    # plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(10, 6))
 
-    # for s_idx in S:
-    #     x_offset = index_periods + (s_idx - (len(S)-1)/2) * 0.2  # centered offsets
+    for s_idx in S:
+        x_offset = index_periods + (s_idx - (len(S)-1)/2) * 0.2  # centered offsets
 
-    #     # 1D heights: total LEF production per period (sum over products)
-    #     XO_period = np.array(
-    #         [sum(XO_val[s_idx, t, j] for j in P) for t in T],
-    #         dtype=float
-    #     )
+        # 1D heights: total LEF production per period (sum over products)
+        XO_period = np.array(
+            [sum(XO_val[s_idx, t, j] for j in P) for t in T],
+            dtype=float
+        )
 
-    #     total_lef = XO_period.sum()
+        total_lef = XO_period.sum()
 
-    #     plt.bar(
-    #         x_offset,
-    #         XO_period,
-    #         width=0.2,
-    #         label=f"{Scenario[s_idx]} : {total_lef:.2f} ton LEF-based tea",
-    #         color=colors[s_idx]
-    #     )
+        plt.bar(
+            x_offset,
+            XO_period,
+            width=0.2,
+            label=f"{Scenario[s_idx]} : {total_lef:.2f} ton LEF-based tea",
+            color=colors[s_idx]
+        )
 
-    # for i in range(1, len(T)):
-    #     plt.axvline(x=i - 0.5, color="black", linestyle="--", linewidth=0.5)
+    for i in range(1, len(T)):
+        plt.axvline(x=i - 0.5, color="black", linestyle="--", linewidth=0.5)
 
-    # plt.xlabel("Periods", fontsize=25)
-    # plt.ylabel("LEF based tea production (ton)", fontsize=25)
-    # plt.xticks(index_periods, [t + 1 for t in T], fontsize=20)
-    # plt.yticks(fontsize=25)
-    # plt.legend(title="Scenario", fontsize=12)
-    # plt.tight_layout()
-    # plt.show()
+    plt.xlabel("Periods", fontsize=25)
+    plt.ylabel("LEF based tea production (ton)", fontsize=25)
+    plt.xticks(index_periods, [t + 1 for t in T], fontsize=20)
+    plt.yticks(fontsize=25)
+    plt.legend(title="Scenario", fontsize=12)
+    plt.tight_layout()
+    plt.show()
 
 
 elif model.status == GRB.INFEASIBLE:
