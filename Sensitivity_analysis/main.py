@@ -1,6 +1,6 @@
 from gurobipy import Model,GRB,quicksum
 import sys
-from Sensitivity_analysis.data2 import *
+from Sensitivity_analysis.data import *
 import time
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,14 +9,15 @@ from matplotlib.ticker import MaxNLocator  # Pour forcer les ticks entiers
 
 r = np.array([0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 1.05, 1.1, 1.15])
 
-with open('Sensitivity_analysis/plot2.py', 'a') as file:
+with open('Sensitivity_analysis/plot.py', 'a') as file:
     # file.write(f'cost = [')
     # file.write(f'ox = [')
-    file.write(f'trade = [')
+    # file.write(f'trade = [')
+    file.write(f'emi_150 = [')
     
-for _ in range(len(r)):
+for _ in range(len(R)):
     
-    u = r[_]*V
+    # u = r[_]*V
     
     model = Model("CapAndTrade_TwoStage")
     model.setParam('OutputFlag',0)
@@ -46,8 +47,8 @@ for _ in range(len(r)):
             for j in P:
                 model.addConstr(XO[s,t,j] + XC[s,t,j] == d[s,t,j],name=f"demand_{s}_{t}")
                 model.addConstr(XO[s,t,j] <= quicksum(b[i] * Y[tp,i] for tp in range(t+1) for i in I),name=f"capacity_{s}_{t}")
-            model.addConstr(sum(eO[s,t,j] * XO[s,t,j] + eC[s,t,j] * XC[s,t,j] for j in P) + Sold[s,t] <= E_max[t] + Buy[s,t],name=f"emissions_{s}_{t}")
-            model.addConstr(Sold[s,t] <= E_max[t], name="emission_sold_and_max_{s}_{t}")
+            model.addConstr(sum(eO[s,t,j] * XO[s,t,j] + eC[s,t,j] * XC[s,t,j] for j in P) + Sold[s,t] <= E_MAX_150[_,t] + Buy[s,t],name=f"emissions_{s}_{t}")
+            model.addConstr(Sold[s,t] <= E_MAX_150[_,t], name="emission_sold_and_max_{s}_{t}")
             
     # One installation per site over horizon
     for i in I:
@@ -73,10 +74,11 @@ for _ in range(len(r)):
         # print(emission)
         # print(model.ObjVal)
         
-        with open('Sensitivity_analysis/plot2.py', 'a') as file:
+        with open('Sensitivity_analysis/plot.py', 'a') as file:
             # file.write(f'{np.round(ox,2)}, ')
-            file.write(f'{np.round(carbon_trading_cost,2)}, ')
+            # file.write(f'{np.round(carbon_trading_cost,2)}, ')
             # file.write(f'{np.round(model.ObjVal,2)}, ')
+            file.write(f'{np.round(emission,2)}, ')
 
     elif model.status == GRB.INFEASIBLE:
         print("Model is infeasible.")
@@ -85,5 +87,5 @@ for _ in range(len(r)):
     else:
         print(f"Optimization ended with status {model.status}")
         
-with open('Sensitivity_analysis/plot2.py', 'a') as file:
+with open('Sensitivity_analysis/plot.py', 'a') as file:
     file.write(f']\n')
