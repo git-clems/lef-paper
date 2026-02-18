@@ -3,7 +3,7 @@ import sys
 # from pathlib import Path
 
 # sys.path.append(str(Path(__file__).resolve().parents[1]))
-from data import*
+from Instances.instance_2 import*
 
 # from data import *
 
@@ -68,10 +68,10 @@ if model.status == GRB.OPTIMAL:
     oper_cost = sum(prob[s] *(pO[s,t,j] * XO_val[s,t,j] + pC[s,t] * XC_val[s,t,j]) for t in T for s in S for j in P)
     carbon_trading_cost = sum(prob[s] *(buy_price[s,t] * Buy_val[s,t] - sold_price[s,t] * Sold_val[s,t]) for t in T for s in S)
 
-    # print(f"Z = {np.round(model.ObjVal,2)}\nCO2 = {np.round(emission,2)}/{sum(E_max)}")
-    # print(f"Installation cost : {install_cost}")
-    # print(f"Production cost : {np.round(oper_cost,2)}")
-    # print(f"Trading gain : {carbon_trading_cost}")
+    print(f"Z = {np.round(model.ObjVal,2)}\nCO2 = {np.round(emission,2)}/{sum(E_max)}")
+    print(f"Installation cost : {install_cost}")
+    print(f"Production cost : {np.round(oper_cost,2)}")
+    print(f"Carbon cost : {carbon_trading_cost}")
     
     # print(pd.DataFrame(Y_val))
     # print("XO :")
@@ -139,7 +139,7 @@ if model.status == GRB.OPTIMAL:
     plt.yticks(fontsize=25)
     plt.legend(title="Scenarios", fontsize=15)
     plt.tight_layout()
-    plt.show()
+    # plt.show()
 
     
         
@@ -177,7 +177,7 @@ if model.status == GRB.OPTIMAL:
     plt.tight_layout()
     plt.axhline(y=0, label = 'Carbon neutrality')
     plt.legend(fontsize=15)
-    plt.show()
+    # plt.show()
     
     
     bar_width = 0.6
@@ -215,7 +215,7 @@ if model.status == GRB.OPTIMAL:
     plt.grid(True, axis='y')
     plt.legend(title = "Costs" , fontsize=15)
     plt.tight_layout()
-    plt.show()
+    # plt.show()
 
 elif model.status == GRB.INFEASIBLE:
     print("Model is infeasible.")
