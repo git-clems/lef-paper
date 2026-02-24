@@ -137,9 +137,9 @@ if model.status == GRB.OPTIMAL:
     plt.ylabel("LEF based tea production (ton)", fontsize=25)
     plt.xticks(index_periods, [t + 1 for t in T], fontsize=20)
     plt.yticks(fontsize=25)
-    plt.legend(title="Scenarios", fontsize=15)
+    plt.legend(title="Scenarios", fontsize=15, title_fontsize = 15)
     plt.tight_layout()
-    # plt.show()
+    plt.show()
 
     
         
@@ -177,7 +177,7 @@ if model.status == GRB.OPTIMAL:
     plt.tight_layout()
     plt.axhline(y=0, label = 'Carbon neutrality')
     plt.legend(fontsize=15)
-    # plt.show()
+    plt.show()
     
     
     bar_width = 0.6
@@ -213,9 +213,9 @@ if model.status == GRB.OPTIMAL:
     plt.yticks(fontsize=25)
     
     plt.grid(True, axis='y')
-    plt.legend(title = "Costs" , fontsize=15)
+    plt.legend(title = "Costs" , fontsize=15, title_fontsize = 15)
     plt.tight_layout()
-    # plt.show()
+    plt.show()
 
 elif model.status == GRB.INFEASIBLE:
     print("Model is infeasible.")
