@@ -8,14 +8,23 @@ from Instances.instance_8 import *  # assumes P and product-indexed data exist
 ITER_MAX = 800
 K_MAX = 3
 
+
 # --------------------------
 # 1) Greedy initial solution
 # --------------------------
 def generate_greedy_initial_solution(data):
     """Initial investment plan based on expected total demand across all products."""
     T, I, P, S, b, d, V, u, NB_T, NB_I = (
-        data['T'], data['I'], data['P'], data['S'], data['b'], data['d'],
-        data['V'], data['u'], data['NB_T'], data['NB_I']
+        data["T"],
+        data["I"],
+        data["P"],
+        data["S"],
+        data["b"],
+        data["d"],
+        data["V"],
+        data["u"],
+        data["NB_T"],
+        data["NB_I"],
     )
 
     # Use an ordered list for robust indexing
@@ -27,20 +36,23 @@ def generate_greedy_initial_solution(data):
 
     # Expected total demand per period (sum over products, average over scenarios)
     avg_total_demand = {
-        t: float(np.sum([np.mean([d[s, t, p] for s in S]) for p in P]))
-        for t in T_list
+        t: float(np.sum([np.mean([d[s, t, p] for s in S]) for p in P])) for t in T_list
     }
 
     for t in T_list:
         idx = tpos[t]
-        cumulative_capacity = sum(b[i] * Y_initial[tp, i] for tp in range(idx + 1) for i in I)
+        cumulative_capacity = sum(
+            b[i] * Y_initial[tp, i] for tp in range(idx + 1) for i in I
+        )
 
         while cumulative_capacity < avg_total_demand[t]:
             best_site_to_build, best_ratio = -1, -1.0
 
             for i in I:
                 if not sites_used[i]:
-                    remaining_periods = NB_T - idx  # maintenance from install period to end
+                    remaining_periods = (
+                        NB_T - idx
+                    )  # maintenance from install period to end
                     total_first_stage_cost = (V * b[i]) + (remaining_periods * u * b[i])
 
                     if total_first_stage_cost > 0:
@@ -65,8 +77,9 @@ def generate_greedy_initial_solution(data):
 # --------------------------
 def shake(Y_current, k, data):
     """Shake function with corrected control flow."""
-    T, I = data['T'], data['I']
-    T_list = list(T); T_list.sort()
+    T, I = data["T"], data["I"]
+    T_list = list(T)
+    T_list.sort()
 
     Y_shaken = Y_current.copy()
     built_plants = list(zip(*np.where(Y_shaken == 1)))  # (t_index, i)
@@ -118,16 +131,26 @@ def shake(Y_current, k, data):
 def create_subproblem_model(data):
     """Creates the Gurobi subproblem for multiple products."""
     sub_model = Model("SecondStage_MultiProduct")
-    sub_model.setParam('OutputFlag', 0)
+    sub_model.setParam("OutputFlag", 0)
     sub_model.setParam("Method", 1)  # dual simplex good for repeated RHS updates
 
     # Keep the edited block exactly:
     sub_model.setParam("Presolve", 0)  # sometimes helps repeated RHS updates
-    sub_model.setParam("Crossover", 0) # if using simplex
+    sub_model.setParam("Crossover", 0)  # if using simplex
 
     S, T, P, prob, pO, pC, d, eO, eC, E_max, buy_price, sold_price = (
-        data['S'], data['T'], data['P'], data['prob'], data['pO'], data['pC'], data['d'],
-        data['eO'], data['eC'], data['E_max'], data['buy_price'], data['sold_price']
+        data["S"],
+        data["T"],
+        data["P"],
+        data["prob"],
+        data["pO"],
+        data["pC"],
+        data["d"],
+        data["eO"],
+        data["eC"],
+        data["E_max"],
+        data["buy_price"],
+        data["sold_price"],
     )
 
     XO = sub_model.addVars(S, T, P, lb=0, name="XO")
@@ -137,31 +160,44 @@ def create_subproblem_model(data):
 
     oper_cost = quicksum(
         prob[s] * (pO[s, t, p] * XO[s, t, p] + pC[s, t, p] * XC[s, t, p])
-        for s in S for t in T for p in P
+        for s in S
+        for t in T
+        for p in P
     )
     carbon_cost = quicksum(
         prob[s] * (buy_price[s, t] * Buy[s, t] - sold_price[s, t] * Sold[s, t])
-        for s in S for t in T
+        for s in S
+        for t in T
     )
     sub_model.setObjective(oper_cost + carbon_cost, GRB.MINIMIZE)
 
     for s in S:
         for t in T:
             for p in P:
-                sub_model.addConstr(XO[s, t, p] + XC[s, t, p] == d[s, t, p],
-                                    name=f"demand_{s}_{t}_{p}")
+                sub_model.addConstr(
+                    XO[s, t, p] + XC[s, t, p] == d[s, t, p], name=f"demand_{s}_{t}_{p}"
+                )
 
             sub_model.addConstr(
-                quicksum(eO[s, t, p] * XO[s, t, p] + eC[s, t, p] * XC[s, t, p] for p in P)
-                + Sold[s, t] <= E_max[t] + Buy[s, t],
-                name=f"emission_cap_{s}_{t}"
+                quicksum(
+                    eO[s, t, p] * XO[s, t, p] + eC[s, t, p] * XC[s, t, p] for p in P
+                )
+                + Sold[s, t]
+                <= E_max[t] + Buy[s, t],
+                name=f"emission_cap_{s}_{t}",
             )
-            sub_model.addConstr(Sold[s, t] <= E_max[t], name=f"emission_sold_and_max_{s}_{t}")
+            sub_model.addConstr(
+                Sold[s, t] <= E_max[t], name=f"emission_sold_and_max_{s}_{t}"
+            )
 
     # Placeholder capacity constraints, RHS updated in evaluate_solution()
-    capacity_constrs = {(s, t): sub_model.addConstr(quicksum(XO[s, t, p] for p in P) <= 0,
-                                                    name=f"cap_{s}_{t}")
-                        for s in S for t in T}
+    capacity_constrs = {
+        (s, t): sub_model.addConstr(
+            quicksum(XO[s, t, p] for p in P) <= 0, name=f"cap_{s}_{t}"
+        )
+        for s in S
+        for t in T
+    }
 
     sub_model.update()
     return sub_model, capacity_constrs
@@ -172,8 +208,17 @@ def create_subproblem_model(data):
 # ------------------------------------------
 def evaluate_solution(Y, sub_model, capacity_constrs, data):
     """Evaluates a given Y for the multi-product problem."""
-    T, I, S, b, V, u, NB_T = data['T'], data['I'], data['S'], data['b'], data['V'], data['u'], data['NB_T']
-    T_list = list(T); T_list.sort()
+    T, I, S, b, V, u, NB_T = (
+        data["T"],
+        data["I"],
+        data["S"],
+        data["b"],
+        data["V"],
+        data["u"],
+        data["NB_T"],
+    )
+    T_list = list(T)
+    T_list.sort()
     tpos = {t: idx for idx, t in enumerate(T_list)}
 
     # First-stage cost computed positionally (maintenance remaining periods)
@@ -203,7 +248,7 @@ def evaluate_solution(Y, sub_model, capacity_constrs, data):
     sub_model.optimize()
     if sub_model.status == GRB.OPTIMAL:
         return first_stage_cost + sub_model.ObjVal
-    return float('inf')
+    return float("inf")
 
 
 # --------------------------
@@ -211,6 +256,7 @@ def evaluate_solution(Y, sub_model, capacity_constrs, data):
 # --------------------------
 def initialize_q_table(states, actions):
     return {s: {a: 0.0 for a in actions} for s in states}
+
 
 def choose_action(state, q_table, actions, epsilon):
     if random.uniform(0, 1) < epsilon:
@@ -221,7 +267,6 @@ def choose_action(state, q_table, actions, epsilon):
     return random.choice(best_actions)
 
 
-
 def update_q_table(q_table, state, action, reward, next_state, alpha, gamma):
     max_next_q = max(q_table[next_state].values())
     learned_value = reward + gamma * max_next_q
@@ -229,25 +274,47 @@ def update_q_table(q_table, state, action, reward, next_state, alpha, gamma):
     q_table[state][action] = (1 - alpha) * old_value + alpha * learned_value
 
 
+def Reward(delta):
+    if delta > 0:
+        return delta
+    else:
+        return 0.2 * delta
+
+def ChooseState(delta):
+    if delta >= 0.02:
+        return 0
+    elif delta >= 0.005:
+        return 1
+    elif delta >= 0:
+        return 2
+    elif delta >= -0.001:
+        return 3
+    elif delta >= -0.005:
+        return 4
+    elif delta >= -0.02:
+        return 5
+    else:
+        return 6
+
 # --------------------------
 # 6) Main Q-learning VNS
 # --------------------------
-def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.95, epsilon=0.9):
+def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.99, epsilon=0.9):
     print("--- Starting Q-Learning VNS for Multi-Product Problem ---")
     start_vns_time = time.time()
-    
+
     start = time.process_time()
 
     # Q-learning setup
-    states = [0, 1]  # 0: Improvement, 1: Stagnation
+    states = [0,1,2,3,4,5,6]
+    # 0: large improvement; 1: moderate improvement; 2: small improvement, 3: nearly unchanged; 4: small degradation; 5: moderate degradation; 6: large degradation;
+    
     actions = list(range(1, k_max + 1))
     q_table = initialize_q_table(states, actions)
 
     # VNS initialization
     sub_model, capacity_constrs = create_subproblem_model(data)
     Y_best = generate_greedy_initial_solution(data)
-    # Y_best = np.zeros((NB_T,NB_I))
-    # Y_best = np.zeros((NB_T, NB_I))
 
     cost_best = evaluate_solution(Y_best, sub_model, capacity_constrs, data)
 
@@ -257,39 +324,30 @@ def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.95, epsilon=0.9)
 
     current_state = 0
     i = 0
-    # while time.process_time() - start < run_time:
     for i in range(max_iterations):
         i += 1
         # Choose action
-        action_k = choose_action(current_state, q_table, actions, epsilon)
+        action = choose_action(current_state, q_table, actions, epsilon)
 
         # Shake
-        Y_shaken = shake(Y_best, action_k, data)
+        Y_shaken = shake(Y_best, action, data)
         cost_shaken = evaluate_solution(Y_shaken, sub_model, capacity_constrs, data)
 
         # Reward + next state
-        delta = cost_best - cost_shaken
-        reward = delta/(max(cost_best, 1))
+        delta = (hist[i-1] - cost_shaken) / hist[i-1]
+        reward = Reward(delta)
+        next_state = ChooseState(delta)
+
         if cost_shaken < cost_best:
-            # reward = cost_best - cost_shaken
-            # reward = delta/(max(cost_best, 1))
-            next_state = 0
             Y_best, cost_best = Y_shaken, cost_shaken
-            print(f"Iter {i+1}: New best found (k={action_k}) -> Cost: {cost_best:.2f}")
-        else:
-            # reward = -5.0
-            # reward = 0.2*delta/(max(cost_best, 1))
-            next_state = 1
+            print(f"Iter {i+1}: New best found (k={action}) -> Cost: {cost_best:.2f}")
+
         hist.append(cost_best)
         time_hist.append(time.process_time() - start)
 
-
         # Update Q-table
-        update_q_table(q_table, current_state, action_k, reward, next_state, alpha, gamma)
+        update_q_table(q_table, current_state, action, reward, next_state, alpha, gamma)
         current_state = next_state
-
-        # Optional epsilon decay (usually helps)
-        # epsilon = max(0.05, epsilon * 0.999)
 
     end_vns_time = time.time()
     print(f"\n--- Q-VNS Finished in {end_vns_time - start_vns_time:.2f} seconds ---")
@@ -302,25 +360,18 @@ def Q_VNS(max_iterations, data, k_max=K_MAX, alpha=0.1, gamma=0.95, epsilon=0.9)
 if __name__ == "__main__":
     start_time = time.process_time()
 
-    problem_data = {
-        'T': T, 'I': I, 'S': S, 'P': P,
-        'NB_T': NB_T, 'NB_I': NB_I, 'NB_S': NB_S, 'NB_P': NB_P,
-        'b': b, 'd': d, 'V': V, 'u': u, 'prob': prob,
-        'pO': pO, 'pC': pC, 'buy_price': buy_price, 'sold_price': sold_price,
-        'eO': eO, 'eC': eC, 'E_max': E_max
-    }
+    problem_data = { "T": T, "I": I, "S": S, "P": P, "NB_T": NB_T, "NB_I": NB_I, "NB_S": NB_S, "NB_P": NB_P, "b": b, "d": d, "V": V, "u": u, "prob": prob, "pO": pO, "pC": pC, "buy_price": buy_price, "sold_price": sold_price, "eO": eO, "eC": eC, "E_max": E_max}
 
     Y_opt, cost_opt, hist, time_hist, q_table = Q_VNS(max_iterations=ITER_MAX, data=problem_data)
 
     with open("Computational_analysis/collection_ql.txt", "a") as file:
-        file.write(f"{np.round(cost_opt, 2)}\t{np.round(time.process_time() - start_time, 2)}\n")
-    
-    
+        file.write(f"{cost_opt: .2f}\t{time.process_time() - start_time: .2f}\n")
+
     with open("Computational_analysis/iteration.py", "a") as interation:
         # interation.write(f'hist_ql, time_ql = {hist}, {time_hist}\n')
-        interation.write(f'hist_regular, time_ql = {hist}, {time_hist}\n')
+        interation.write(f"hist_regular, time_ql = {hist}, {time_hist}\n")
 
     plt.plot(hist)
-    # plt.show()
+    plt.show()
 
     print("=====================================")

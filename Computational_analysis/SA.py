@@ -2,7 +2,7 @@ import numpy as np
 import random
 import time
 from gurobipy import Model, GRB, quicksum
-from Instances.instance_9 import *
+from Instances.instance_8 import *
 import matplotlib.pyplot as plt
 
 # -----------------------------

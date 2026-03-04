@@ -2,7 +2,7 @@ import numpy as np
 import random
 import time
 from gurobipy import Model, GRB, quicksum
-from Instances.instance_9 import *
+from Instances.instance_8 import *
 import matplotlib.pyplot as plt
 start_time = time.process_time()
 
@@ -184,10 +184,11 @@ def VNS(k_max, max_iterations, data):
     hist = [cost_best]
     time_hist = [0]
     
-    iter_count = 0
-    while time.process_time() - start < run_time:
-        iter_count += 1
-    # while iter_count < max_iterations or time.process_time() - start < run_time:
+    i = 0
+    # while time.process_time() - start < run_time:
+        # iter_count += 1
+    while i < max_iterations :
+        i += 1
         k = 1
         while k <= k_max:
             Y_shaken = shake(Y_best, k, data)
@@ -195,7 +196,7 @@ def VNS(k_max, max_iterations, data):
             if cost_shaken < cost_best:
                 Y_best = Y_shaken
                 cost_best = cost_shaken
-                print(f"Iter {iter_count}: New best found (from k={k}) -> Cost: {cost_best:.2f}")
+                print(f"Iter {i+1}: New best found (from k={k}) -> Cost: {cost_best:.2f}")
                 k = 1
                 
                 hist.append(cost_best)
@@ -203,7 +204,7 @@ def VNS(k_max, max_iterations, data):
             else:
                 k += 1
             
-        iter_count += 1
+        # iter_count += 1
     
     end_vns_time = time.time()
     print(f"\n--- VNS Finished in {end_vns_time - start_vns_time:.2f} seconds ---")
