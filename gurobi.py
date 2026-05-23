@@ -163,20 +163,85 @@ if model.status == GRB.OPTIMAL:
         for t in T 
     ]
     
+    avg_demand = [sum(prob[s]*d[s,t,j] for s in S for j in P) for t in T ]
+    
     # === Figure 1 : Émissions ===
-    plt.figure(figsize=(10, 5))
-    plt.plot(T, emission_per_period, marker='*', color='black', label="Total emission per period")
-    plt.plot(T, E_max, marker='x', color='orange', linestyle = "--", label="Emission cap per period")
-    # plt.title("Émission moyenne par période")
-    plt.ylabel("GHG emission (tCO₂-eq)", fontsize=25)
-    plt.xlabel("Periods", fontsize=25)
-    plt.xticks(x, [t+1 for t in T], fontsize = 20)
-    plt.yticks(fontsize = 20)
-    plt.grid(True)
-    plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
+    # plt.figure(figsize=(10, 5))
+    # plt.plot(T, emission_per_period, marker='*', color='black', label="Total emission per period")
+    # plt.plot(T, E_max, marker='x', color='orange', linestyle = "--", label="Emission cap per period")
+    # # plt.title("Émission moyenne par période")
+    # plt.ylabel("GHG emission (tCO₂-eq)", fontsize=25)
+    # plt.xlabel("Periods", fontsize=25)
+    # plt.xticks(x, [t+1 for t in T], fontsize = 20)
+    # plt.yticks(fontsize = 20)
+    # plt.grid(True)
+    # plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
+    # plt.tight_layout()
+    # plt.axhline(y=0, label = 'Carbon neutrality')
+    # plt.legend(fontsize=15)
+    # plt.show()
+    
+    
+        # === Figure 1 : Émissions + demande moyenne ===
+    fig, ax1 = plt.subplots(figsize=(10, 5))
+
+    # --- Courbes émissions ---
+    ax1.plot(
+        T,
+        emission_per_period,
+        marker='*',
+        color='black',
+        label="Total emission per period"
+    )
+
+    ax1.plot(
+        T,
+        E_max,
+        marker='x',
+        color='orange',
+        linestyle="--",
+        label="Emission cap per period"
+    )
+
+    ax1.axhline(y=0, color='gray', linestyle=':')
+
+    ax1.set_ylabel("GHG emission (tCO₂-eq)", fontsize=25)
+    ax1.set_xlabel("Periods", fontsize=25)
+
+    ax1.set_xticks(T)
+    ax1.set_xticklabels([t + 1 for t in T], fontsize=20)
+
+    ax1.tick_params(axis='y', labelsize=20)
+
+    ax1.grid(True)
+    ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+    # --- Axe secondaire pour la demande ---
+    ax2 = ax1.twinx()
+
+    ax2.bar(
+        T,
+        avg_demand,
+        alpha=0.3,
+        color='steelblue',
+        label='Average demand'
+    )
+
+    ax2.set_ylabel("Average demand", fontsize=25, color='steelblue')
+    ax2.tick_params(axis='y', labelsize=20, colors='steelblue')
+
+    # --- Fusion des légendes ---
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+
+    ax1.legend(
+        lines1 + lines2,
+        labels1 + labels2,
+        fontsize=15,
+        loc='best'
+    )
+
     plt.tight_layout()
-    plt.axhline(y=0, label = 'Carbon neutrality')
-    plt.legend(fontsize=15)
     plt.show()
     
     
